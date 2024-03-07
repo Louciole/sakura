@@ -1,0 +1,22 @@
+[build-system]
+requires = ["hatchling","cherrypy"]
+build-backend = "hatchling.build"
+
+[project]
+name = "cerise"
+version = "0.0.1"
+authors = [
+    { name="Lou ! ", email="lou@carbonlab.dev" },
+]
+description = "A wrapper framework for cherry py adding every feature needed for Carbonlab"
+readme = "README.md"
+requires-python = ">=3.8"
+license = {file = "LICENSE.md"}
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Operating System :: OS Independent",
+]
+
+[project.urls]
+Homepage = "https://gitlab.com/Louciole/cerise"
+Issues = "https://gitlab.com/Louciole/cerise/-/issues"
