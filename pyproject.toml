@@ -16,7 +16,10 @@ readme = "README.md"
 requires-python = ">=3.8"
 dependencies = [
     "cherrypy",
-    "configparser"
+    "configparser",
+    "bcrypt",
+    "PyJWT",
+    "dkimpy"
 ]
 license = {file = "LICENSE.md"}
 classifiers = [
