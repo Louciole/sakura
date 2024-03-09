@@ -15,10 +15,12 @@ from configparser import ConfigParser
 import random as rand
 import math
 
-PATH = dirname(abspath(__file__))
-
 
 class Cerise:
+    def __init__(self, path, configFile):
+        self.path = path
+        self.start(configFile)
+
     def parseAcceptLanguage(self, acceptLanguage):
         languages = acceptLanguage.split(",")
         locale_q_pairs = []
@@ -46,16 +48,18 @@ class Cerise:
     def importConf(self, configFile):
         self.config = ConfigParser()
         try:
-            self.config.read(PATH + configFile)
+            self.config.read(self.path + configFile)
+            print("config read", self.path + configFile)
         except Exception:
             print("please create a config file")
 
     def start(self, configFile):
         self.importConf(configFile)
+        print("config ", self.config.sections())
+
         cherrypy.config.update({'server.socket_host': self.config.get('server', 'IP'),
                                 'server.socket_port': int(self.config.get('server', 'PORT')),
                                 'tools.staticdir.on': True,
-                                'tools.staticdir.dir': abspath(PATH + '/ressources'),
-                                'error_page.404': PATH + "/ressources/404.html"})
+                                'tools.staticdir.dir': abspath(self.path + '/ressources'),
+                                'error_page.404': self.path + "/ressources/404.html"})
         cherrypy.quickstart(self)
-
