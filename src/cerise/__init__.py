@@ -1,4 +1,4 @@
-"""Cerise is a toolkit that goes over cherrypy handling many features
+"""Sakura is a toolkit that goes over cherrypy handling many features
 like mailing and authentication for Carbonlab's infrastructure.
 """
 
@@ -13,33 +13,38 @@ import jwt
 from configparser import ConfigParser
 
 # in house modules
-from db import db_service as db
+from cerise.db import db_service as db
 
 # OTP imports
 import random as rand
 import math
 
 
-class Cerise:
-    def __init__(self, path, configFile, debug=False):
+class Server:
+    def __init__(self, path, configFile, noStart=False):
+        print("starting Sakura server...")
         self.path = path
-        self.debug = debug
-
-        self.start(configFile)
+        self.importConf(configFile)
         self.db = db.DB(user=self.config.get('DB', 'DB_USER'), password=self.config.get('DB', 'DB_PASSWORD'),
-                   host=self.config.get('DB', 'DB_HOST'), port=int(self.config.get('DB', 'DB_PORT')), db=self.config.get('DB', 'DB_NAME'))
-
+                        host=self.config.get('DB', 'DB_HOST'), port=int(self.config.get('DB', 'DB_PORT')), db=self.config.get('DB', 'DB_NAME'))
+        print("successfully connected to postgresql!")
+        self.uniauth = db.DB(user=self.config.get('DB', 'DB_USER'), password=self.config.get('DB', 'DB_PASSWORD'),
+                             host=self.config.get('UNIAUTH', 'DB_HOST'), port=int(self.config.get('UNIAUTH', 'DB_PORT')), db=self.config.get('UNIAUTH', 'DB_NAME'))
+        print("successfully connected to uniauth!")
+        if noStart:
+            return
+        self.start()
 
     #-----------------------UNIAUTH RELATED METHODS-----------------------------
 
     @cherrypy.expose
     def auth(self, parrain=None):
-        return open(self.PATH + "/ressources/home/auth.html")
+        return open(self.path + "/ressources/home/auth.html")
 
     @cherrypy.expose
     def verif(self):
         self.checkJwt(verif=True)
-        return open(PATH + "/ressources/home/verif.html")
+        return open(self.path + "/ressources/home/verif.html")
 
     @cherrypy.expose
     def resendVerif(self):
@@ -143,10 +148,10 @@ class Cerise:
         OTP = self.generateOTP()
         expiration = datetime.datetime.now() + datetime.timedelta(hours=1)
         self.db.insertReplaceDict("verif_codes", {"id": uid, "code": OTP, "expiration": expiration})
-        if not self.debug:
+        if not self.debug.config.getboolean("SERVER", "DEBUG"):
             noreply.sendConfirmation(mail, OTP)
         else:
-            print(OTP)
+            print("OTP : ",OTP)
 
     def generateOTP(self):
         digits = "0123456789"
@@ -200,14 +205,11 @@ class Cerise:
         self.config = ConfigParser()
         try:
             self.config.read(self.path + configFile)
-            print("config read", self.path + configFile)
+            print("config at " + self.path + configFile + " loaded")
         except Exception:
             print("please create a config file")
 
-    def start(self, configFile):
-        self.importConf(configFile)
-        print("config ", self.config.sections())
-
+    def start(self):
         cherrypy.config.update({'server.socket_host': self.config.get('server', 'IP'),
                                 'server.socket_port': int(self.config.get('server', 'PORT')),
                                 'tools.staticdir.on': True,

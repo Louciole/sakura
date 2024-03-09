@@ -1,10 +1,10 @@
-# Cerise
+# Sakura 🍒
 
 A wrapper framework for cherry-py adding every feature needed for Carbonlab
 
 ## Install
 
-`pip install git+https://gitlab.com/Louciole/cerise.git/`
+`pip install git+https://gitlab.com/Louciole/sakura.git/`
 
 ## Build from sources
 
@@ -12,9 +12,9 @@ A wrapper framework for cherry-py adding every feature needed for Carbonlab
 
 `python3 -m build`
 
-`pip install PATH-TO-HERE/dist/cerise-0.0.1-py3-none-any.whl`
+`pip install PATH-TO-HERE/dist/sakura-0.0.3-py3-none-any.whl`
 
 ## Create new project
 
-`git clone git@gitlab.com:Louciole/emptycerise.git
+`git clone git@gitlab.com:Louciole/emptysakura.git
 `

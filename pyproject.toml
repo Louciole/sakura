@@ -6,8 +6,8 @@ build-backend = "hatchling.build"
 packages = ["src/cerise"]
 
 [project]
-name = "cerise"
-version = "0.0.2"
+name = "sakura"
+version = "0.0.3"
 authors = [
     { name="Lou ! ", email="lou@carbonlab.dev" },
 ]
@@ -18,8 +18,7 @@ dependencies = [
     "cherrypy",
     "configparser",
     "bcrypt",
-    "PyJWT",
-    "dkimpy"
+    "PyJWT"
 ]
 license = {file = "LICENSE.md"}
 classifiers = [
@@ -28,5 +27,5 @@ classifiers = [
 ]
 
 [project.urls]
-Homepage = "https://gitlab.com/Louciole/cerise"
-Issues = "https://gitlab.com/Louciole/cerise/-/issues"
+Homepage = "https://gitlab.com/Louciole/sakura"
+Issues = "https://gitlab.com/Louciole/sakura/-/issues"
