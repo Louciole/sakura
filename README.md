@@ -12,7 +12,7 @@ A wrapper framework for cherry-py adding every feature needed for Carbonlab
 
 `python3 -m build`
 
-`pip install PATH-TO-HERE/dist/sakura-0.0.5-py3-none-any.whl`
+`pip install PATH-TO-HERE/dist/sakura-0.1.0-py3-none-any.whl`
 
 ## Create new project
 
