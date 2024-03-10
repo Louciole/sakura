@@ -13,7 +13,7 @@ import jwt
 from configparser import ConfigParser
 
 # in house modules
-from cerise.db import db_service as db
+from sakura.db import db_service as db
 
 # OTP imports
 import random as rand
@@ -56,7 +56,7 @@ class Server:
     def login(self, email, password, parrain=None):
         if 'email' and 'password':
             password = password.encode('utf-8')  # converting to bytes array
-            account = self.db.getUserCredentials(email)
+            account = self.uniauth.getUserCredentials(email)
             # If account exists in accounts table
             if account:
                 msg = self.connect(account, password)
@@ -70,9 +70,9 @@ class Server:
     @cherrypy.expose
     def signup(self, code):
         user = self.getUser()
-        actual = self.db.getSomething("verif_codes", user)
+        actual = self.uniauth.getSomething("verif_codes", user)
         if str(actual["code"]) == code and actual["expiration"] > datetime.datetime.now():
-            self.db.edit("accounts", user, "verified", True)
+            self.uniauth.edit("accounts", user, "verified", True)
             self.createJwt(user, True)
             return "ok"
         else:
@@ -93,8 +93,8 @@ class Server:
         cookie = cherrypy.response.cookie
         cookie['JWT'] = token
         cookie['JWT']['expires'] = 0
-        self.db.deleteSomething("accounts", info['username'])
-        self.db.deleteSomething("verif_codes", info['username'])
+        self.uniauth.deleteSomething("accounts", info['username'])
+        self.uniauth.deleteSomething("verif_codes", info['username'])
         return 'ok'
 
 
@@ -126,7 +126,7 @@ class Server:
             if not info['verified'] and not verif:
                 raise cherrypy.HTTPRedirect("/verif/")
             elif verif and info['verified']:
-                raise cherrypy.HTTPRedirect("/demo/")
+                raise cherrypy.HTTPRedirect(self.config.get("server", "DEFAULT_ENDPOINT"))
         except jwt.ExpiredSignatureError:
             raise cherrypy.HTTPRedirect("/auth/")
         except jwt.DecodeError:
@@ -144,11 +144,11 @@ class Server:
 
     def sendVerification(self, uid, mail=''):
         if mail == '':
-            mail = self.db.getUser(uid, target="email")["email"]
+            mail = self.uniauth.getUser(uid, target="email")["email"]
         OTP = self.generateOTP()
         expiration = datetime.datetime.now() + datetime.timedelta(hours=1)
-        self.db.insertReplaceDict("verif_codes", {"id": uid, "code": OTP, "expiration": expiration})
-        if not self.debug.config.getboolean("SERVER", "DEBUG"):
+        self.uniauth.insertReplaceDict("verif_codes", {"id": uid, "code": OTP, "expiration": expiration})
+        if not self.config.getboolean("server", "DEBUG"):
             noreply.sendConfirmation(mail, OTP)
         else:
             print("OTP : ",OTP)
@@ -165,13 +165,13 @@ class Server:
     def register(self, username, password, parrain):
         salt = bcrypt.gensalt()
         hash = bcrypt.hashpw(password, salt)
-        uid = self.db.createAccount(username, hash, parrain)
+        uid = self.uniauth.createAccount(username, hash, parrain)
         self.createJwt(uid, False)
         self.sendVerification(uid=uid, mail=username)
-        pending = self.db.getSomething('pendingmembership', username, 'email')
+        pending = self.uniauth.getSomething('pendingmembership', username, 'email')
         if pending:
-            self.db.insertDict('membership', {'account': uid, 'company': pending['company']})
-            self.db.deleteSomething('pendingmembership',pending['id'])
+            self.uniauth.insertDict('membership', {'account': uid, 'company': pending['company']})
+            self.uniauth.deleteSomething('pendingmembership', pending['id'])
         return "verif"
 
     def connect(self, account, password):
