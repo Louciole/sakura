@@ -35,11 +35,11 @@ class Server:
 
         if not self.config.getboolean("server", "DEBUG"):
             noreply = mailing.Mailing(self.config.get('MAILING', 'MAILING_HOST'), self.config.get('MAILING', 'MAILING_PORT'),
-                                      "noreply.seedify@carbonlab.dev", self.config.get('MAILING', 'NOREPLY_PASSWORD'))
+                                      "noreply@carbonlab.dev", self.config.get('MAILING', 'NOREPLY_PASSWORD'), self.config.get("server", "SERVICE_NAME"))
             print("successfully connected to the mailing service!")
 
         if noStart:
-                return
+            return
         self.start()
 
     #-----------------------UNIAUTH RELATED METHODS-----------------------------

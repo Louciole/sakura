@@ -8,10 +8,11 @@ PATH = ""
 
 
 class Mailing:
-    def __init__(self, host, port, address, password):
+    def __init__(self, host, port, address, password, serviceName):
         try:
-            self.host=host
-            self.port=port
+            self.name = serviceName
+            self.host = host
+            self.port = port
             self.password = password
             self.smtp = smtplib.SMTP(host, port)
             self.smtp.ehlo()  # send the extended hello to our server
@@ -69,10 +70,10 @@ class Mailing:
 
         mail_confirmation = MIMEMultipart('alternative')
         mail_confirmation['Subject'] = "🌱 Confirmez votre adresse ! 📨"
-        mail_confirmation['From'] = "Smooth Projects <" + self.address + ">"
+        mail_confirmation['From'] = self.name + " <" + self.address + ">"
         mail_confirmation['Message-ID'] = email.utils.make_msgid(domain='carbonlab.dev')
         mail_confirmation['Date'] = email.utils.formatdate()
-        text = "Confirm your Smooth Projects account : " + OTP
+        text = "Confirm your " + self.name + " account : " + OTP
         part1 = MIMEText(text, 'plain')
         part2 = MIMEText(self.template_confirmation.format(OTP), 'html')
         mail_confirmation.attach(part1)
@@ -90,11 +91,11 @@ class Mailing:
             f.close()
             self.mail_invitation = MIMEMultipart('alternative')
             self.mail_invitation['Subject'] = "🔔 Rejoignez " + company + " 🔔"
-            self.mail_invitation['From'] = "Smooth Projects <" + self.address + ">"
+            self.mail_invitation['From'] = self.name + " <" + self.address + ">"
 
         self.mail_invitation['Message-ID'] = email.utils.make_msgid(domain='carbonlab.dev')
         self.mail_invitation['Date'] = email.utils.formatdate()
-        text = "Inscrivez vous sur Seedify pour rejoindre " + company
+        text = "Inscrivez vous sur " + self.name + " pour rejoindre " + company
         part1 = MIMEText(text, 'plain')
         part2 = MIMEText(self.template_org_invitation.format(company,company), 'html')
         self.mail_invitation.attach(part1)

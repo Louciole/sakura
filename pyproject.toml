@@ -7,7 +7,7 @@ packages = ["src/sakura"]
 
 [project]
 name = "sakura"
-version = "0.0.4"
+version = "0.0.5"
 authors = [
     { name="Lou ! ", email="lou@carbonlab.dev" },
 ]
@@ -18,7 +18,8 @@ dependencies = [
     "cherrypy",
     "configparser",
     "bcrypt",
-    "PyJWT"
+    "PyJWT",
+    "dkimpy"
 ]
 license = {file = "LICENSE.md"}
 classifiers = [
