@@ -14,6 +14,7 @@ from configparser import ConfigParser
 
 # in house modules
 from sakura.db import db_service as db
+from sakura.mailing import mailing_service as mailing
 
 # OTP imports
 import random as rand
@@ -31,8 +32,14 @@ class Server:
         self.uniauth = db.DB(user=self.config.get('DB', 'DB_USER'), password=self.config.get('DB', 'DB_PASSWORD'),
                              host=self.config.get('UNIAUTH', 'DB_HOST'), port=int(self.config.get('UNIAUTH', 'DB_PORT')), db=self.config.get('UNIAUTH', 'DB_NAME'))
         print("successfully connected to uniauth!")
+
+        if not self.config.getboolean("server", "DEBUG"):
+            noreply = mailing.Mailing(self.config.get('MAILING', 'MAILING_HOST'), self.config.get('MAILING', 'MAILING_PORT'),
+                                      "noreply.seedify@carbonlab.dev", self.config.get('MAILING', 'NOREPLY_PASSWORD'))
+            print("successfully connected to the mailing service!")
+
         if noStart:
-            return
+                return
         self.start()
 
     #-----------------------UNIAUTH RELATED METHODS-----------------------------

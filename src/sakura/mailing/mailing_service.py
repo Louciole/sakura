@@ -1,0 +1,105 @@
+import smtplib
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
+import email.utils
+import dkim
+
+PATH = ""
+
+
+class Mailing:
+    def __init__(self, host, port, address, password):
+        try:
+            self.host=host
+            self.port=port
+            self.password = password
+            self.smtp = smtplib.SMTP(host, port)
+            self.smtp.ehlo()  # send the extended hello to our server
+            self.smtp.starttls()
+            self.address = address
+            self.password=password
+            self.smtp.login(address, password)
+            with open(PATH + "/mailing/dkim.txt") as fh:
+                self.private = fh.read()
+            print("connected")
+        except smtplib.SMTPException as e:
+            print(f"Error connecting to mailing server : {e}")
+            self.smtp.quit()
+
+    def restart(self):
+        self.smtp = smtplib.SMTP(self.host, self.port)
+        self.smtp.ehlo()  # send the extended hello to our server
+        self.smtp.starttls()
+        self.smtp.login(self.address, self.password)
+        print("reconnected")
+
+    def is_connected(conn):
+        try:
+            status = conn.noop()[0]
+        except:  # smtplib.SMTPServerDisconnected
+            status = -1
+        return True if status == 250 else False
+
+    def sendMail(self, content):
+        if not self.is_connected():
+            self.restart()
+        try:
+            self.smtp.send_message(content)
+        except smtplib.SMTPException as e:
+            print(f"Error sending a mail : {e}")
+
+
+    def signMail(self, mail):
+        headers = ["To", "From", "Subject"]
+        sig = dkim.sign(
+            message=mail.as_bytes(),
+            selector="1686741263.carbonlab".encode(),
+            domain="carbonlab.dev".encode(),
+            privkey=self.private.encode(),
+            include_headers=headers, )
+        mail["DKIM-Signature"] = sig[len("DKIM-Signature: "):].decode()
+
+    def sendConfirmation(self, target, OTP):
+        try:
+            self.template_confirmation
+        except:
+            f = open(PATH + "/mailing/mailVerif.html", "r")
+            self.template_confirmation = f.read()
+            f.close()
+
+        mail_confirmation = MIMEMultipart('alternative')
+        mail_confirmation['Subject'] = "🌱 Confirmez votre adresse ! 📨"
+        mail_confirmation['From'] = "Smooth Projects <" + self.address + ">"
+        mail_confirmation['Message-ID'] = email.utils.make_msgid(domain='carbonlab.dev')
+        mail_confirmation['Date'] = email.utils.formatdate()
+        text = "Confirm your Smooth Projects account : " + OTP
+        part1 = MIMEText(text, 'plain')
+        part2 = MIMEText(self.template_confirmation.format(OTP), 'html')
+        mail_confirmation.attach(part1)
+        mail_confirmation.attach(part2)
+        mail_confirmation['To'] = target  # ATTENTION CE N'EST PAS UNE COPIE CACHEE
+        self.signMail(mail_confirmation)
+        self.sendMail(mail_confirmation)
+
+    def sendOrgInvite(self, target, company):
+        try:
+            self.template_org_invitation
+        except:
+            f = open(PATH + "/mailing/mailInvite.html", "r")
+            self.template_org_invitation = f.read()
+            f.close()
+            self.mail_invitation = MIMEMultipart('alternative')
+            self.mail_invitation['Subject'] = "🔔 Rejoignez " + company + " 🔔"
+            self.mail_invitation['From'] = "Smooth Projects <" + self.address + ">"
+
+        self.mail_invitation['Message-ID'] = email.utils.make_msgid(domain='carbonlab.dev')
+        self.mail_invitation['Date'] = email.utils.formatdate()
+        text = "Inscrivez vous sur Seedify pour rejoindre " + company
+        part1 = MIMEText(text, 'plain')
+        part2 = MIMEText(self.template_org_invitation.format(company,company), 'html')
+        self.mail_invitation.attach(part1)
+        self.mail_invitation.attach(part2)
+        self.mail_invitation['To'] = target  # ATTENTION CE N'EST PAS UNE COPIE CACHEE
+        self.signMail(self.mail_invitation)
+
+        self.sendMail(self.mail_invitation)
