@@ -4,11 +4,9 @@ from email.mime.text import MIMEText
 import email.utils
 import dkim
 
-PATH = ""
-
 
 class Mailing:
-    def __init__(self, host, port, address, password, serviceName):
+    def __init__(self, host, port, address, password, serviceName, path):
         try:
             self.name = serviceName
             self.host = host
@@ -18,9 +16,10 @@ class Mailing:
             self.smtp.ehlo()  # send the extended hello to our server
             self.smtp.starttls()
             self.address = address
-            self.password=password
+            self.password = password
             self.smtp.login(address, password)
-            with open(PATH + "/mailing/dkim.txt") as fh:
+            self.path = path
+            with open(self.path + "/mailing/dkim.txt") as fh:
                 self.private = fh.read()
             print("connected")
         except smtplib.SMTPException as e:
@@ -64,7 +63,7 @@ class Mailing:
         try:
             self.template_confirmation
         except:
-            f = open(PATH + "/mailing/mailVerif.html", "r")
+            f = open(self.path + "/mailing/mailVerif.html", "r")
             self.template_confirmation = f.read()
             f.close()
 
@@ -86,7 +85,7 @@ class Mailing:
         try:
             self.template_org_invitation
         except:
-            f = open(PATH + "/mailing/mailInvite.html", "r")
+            f = open(self.path + "/mailing/mailInvite.html", "r")
             self.template_org_invitation = f.read()
             f.close()
             self.mail_invitation = MIMEMultipart('alternative')

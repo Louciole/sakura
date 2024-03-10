@@ -34,8 +34,9 @@ class Server:
         print("successfully connected to uniauth!")
 
         if not self.config.getboolean("server", "DEBUG"):
-            noreply = mailing.Mailing(self.config.get('MAILING', 'MAILING_HOST'), self.config.get('MAILING', 'MAILING_PORT'),
-                                      "noreply@carbonlab.dev", self.config.get('MAILING', 'NOREPLY_PASSWORD'), self.config.get("server", "SERVICE_NAME"))
+            self.noreply = mailing.Mailing(self.config.get('MAILING', 'MAILING_HOST'), self.config.get('MAILING', 'MAILING_PORT'),
+                                           "noreply@carbonlab.dev", self.config.get('MAILING', 'NOREPLY_PASSWORD'),
+                                           self.config.get("server", "SERVICE_NAME"), self.path)
             print("successfully connected to the mailing service!")
 
         if noStart:
@@ -156,7 +157,7 @@ class Server:
         expiration = datetime.datetime.now() + datetime.timedelta(hours=1)
         self.uniauth.insertReplaceDict("verif_codes", {"id": uid, "code": OTP, "expiration": expiration})
         if not self.config.getboolean("server", "DEBUG"):
-            noreply.sendConfirmation(mail, OTP)
+            self.noreply.sendConfirmation(mail, OTP)
         else:
             print("OTP : ",OTP)
 

@@ -1,3 +1,4 @@
+from os.path import abspath, dirname
 
 import psycopg
 from psycopg.rows import dict_row
@@ -106,4 +107,8 @@ class DB:
     def deleteSomething(self, table, id):
         sql_str = sql.SQL("delete from {} where id = %s").format(sql.Identifier(table))
         self.cur.execute(sql_str, (id,))
+        self.conn.commit()
+
+    def initUniauth(self):
+        self.cur.execute(open(dirname(abspath(__file__)) + "/UNIAUTH.sql", "r").read())
         self.conn.commit()
