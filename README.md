@@ -1,6 +1,6 @@
 # BASE PROJECT 🍃
 
-❓️L'appli de recrutement préferée de ton recruteur préferé. <br>  
+❓️Le template parfait pour commencer une application Sakura. <br>  
 🟢 Status : https://status.carbonlab.dev
 
 ## 🏎️ getting started

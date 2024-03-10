@@ -1,13 +1,13 @@
-from cerise import Cerise
+from sakura import Server
 import cherrypy
 
 from os.path import abspath, dirname
 PATH = dirname(abspath(__file__))
 
-class Disclone(Cerise):
+class Hello(Server):
     @cherrypy.expose
     def index(self):
         return open(PATH + "/ressources/home/home.html")
 
 
-Disclone(path=PATH, configFile="/server.ini")
+Hello(path=PATH, configFile="/server.ini")
