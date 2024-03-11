@@ -1,4 +1,4 @@
-create table accounts (
+create table account (
     id bigserial NOT NULL PRIMARY KEY,
     email varchar(319),
     password bytea not null,
@@ -6,13 +6,13 @@ create table accounts (
     verified boolean,
     parrain int
 );
-ALTER TABLE accounts
+ALTER TABLE account
 ADD CONSTRAINT PARRAIN_CONSTRAINT
 FOREIGN KEY (parrain)
-REFERENCES accounts (id)
+REFERENCES account (id)
 ON UPDATE CASCADE;
 
-create table verif_codes (
+create table verif_code (
     id integer NOT NULL PRIMARY KEY,
     code varchar(6) NOT NULL,
     expiration timestamp NOT NULL

@@ -78,9 +78,9 @@ class Server:
     @cherrypy.expose
     def signup(self, code):
         user = self.getUser()
-        actual = self.uniauth.getSomething("verif_codes", user)
+        actual = self.uniauth.getSomething("verif_code", user)
         if str(actual["code"]) == code and actual["expiration"] > datetime.datetime.now():
-            self.uniauth.edit("accounts", user, "verified", True)
+            self.uniauth.edit("account", user, "verified", True)
             self.createJwt(user, True)
             return "ok"
         else:
@@ -101,8 +101,8 @@ class Server:
         cookie = cherrypy.response.cookie
         cookie['JWT'] = token
         cookie['JWT']['expires'] = 0
-        self.uniauth.deleteSomething("accounts", info['username'])
-        self.uniauth.deleteSomething("verif_codes", info['username'])
+        self.uniauth.deleteSomething("account", info['username'])
+        self.uniauth.deleteSomething("verif_code", info['username'])
         return 'ok'
 
 
@@ -155,7 +155,7 @@ class Server:
             mail = self.uniauth.getUser(uid, target="email")["email"]
         OTP = self.generateOTP()
         expiration = datetime.datetime.now() + datetime.timedelta(hours=1)
-        self.uniauth.insertReplaceDict("verif_codes", {"id": uid, "code": OTP, "expiration": expiration})
+        self.uniauth.insertReplaceDict("verif_code", {"id": uid, "code": OTP, "expiration": expiration})
         if not self.config.getboolean("server", "DEBUG"):
             self.noreply.sendConfirmation(mail, OTP)
         else:
