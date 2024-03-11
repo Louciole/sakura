@@ -84,15 +84,9 @@ class DB:
         commonTable = sql.Identifier(commonTable)
 
         self.cur.execute(
-            sql.SQL('SELECT {}.* FROM {},{},{} WHERE {}.{}=%s and {}.id = {}.{} and {}.id={}.{}').format(table, table,
-                                                                                                         commonTable,
-                                                                                                         proxy, proxy,
-                                                                                                         commonTable,
-                                                                                                         commonTable,
-                                                                                                         proxy,
-                                                                                                         commonTable,
-                                                                                                         table, proxy,
-                                                                                                         table), (id,))
+            sql.SQL('SELECT {}.* FROM {},{} WHERE {}.{}=%s and {}.id={}.{}').format(table, table, proxy,
+                                                                                    proxy, commonTable, table,
+                                                                                    proxy, table), (id,))
         r = self.cur.fetchall()
         if r:
             return r
