@@ -186,10 +186,13 @@ class Server:
         result = bcrypt.checkpw(password, account["password"])
         if result:
             self.createJwt(account['id'], account["verified"])
+            self.onLogin(account['id'])
             return "ok"
         else:
             return "invalid email or password"
 
+    def onLogin(self, uid):
+        pass
 
     #--------------------------GENERAL USE METHODS------------------------------
 
