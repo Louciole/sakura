@@ -115,7 +115,7 @@ class DB:
         if r:
             return r
         else:
-            return
+            return []
 
     def insertDict(self, table, dict, getId=False):
         cols = []
