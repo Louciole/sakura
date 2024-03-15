@@ -93,6 +93,30 @@ class DB:
         else:
             return
 
+
+    def getFilters(self, table, filter):
+        # this take a filter in the following format
+        # [identifier, operation, value, AND/OR... if relevant, ...]
+
+        condition = []
+        values = []
+        for i in range(0, len(filter), 4):
+            values.append(filter[i+2])
+            if i+4 < len(filter):
+                condition.append(sql.Identifier(filter[i]))
+                condition.append(sql.SQL(filter[i+1]+" %s "+filter[i+3]))
+            else:
+                condition.append(sql.Identifier(filter[i]))
+                condition.append(sql.SQL(filter[i+1]+" %s"))
+
+        query = sql.SQL('SELECT * FROM {} WHERE {condition}').format(sql.Identifier(table), condition=sql.SQL(' ').join(condition))
+        self.cur.execute(query, values)
+        r = self.cur.fetchall()
+        if r:
+            return r
+        else:
+            return
+
     def insertDict(self, table, dict, getId=False):
         cols = []
         vals = []
