@@ -102,7 +102,7 @@ class DB:
         values = []
         for i in range(0, len(filter), 4):
             values.append(filter[i+2])
-            if i+4 < len(filter):
+            if i+4 <= len(filter):
                 condition.append(sql.Identifier(filter[i]))
                 condition.append(sql.SQL(filter[i+1]+" %s "+filter[i+3]))
             else:
