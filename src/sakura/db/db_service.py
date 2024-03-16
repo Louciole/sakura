@@ -53,9 +53,13 @@ class DB:
         return r['id']
 
     def getSomething(self, table, id, selector='id'):
-        self.cur.execute(
-            sql.SQL('SELECT * FROM {} WHERE {} = %s').format(sql.Identifier(table), sql.Identifier(selector)), (id,))
-        r = self.cur.fetchone()
+        try:
+            self.cur.execute(
+                sql.SQL('SELECT * FROM {} WHERE {} = %s').format(sql.Identifier(table), sql.Identifier(selector)), (id,))
+            r = self.cur.fetchone()
+        except Exception as e:
+            print(f"[SAKURA] An error occurred with the db: {e}")
+            self.conn.rollback()
         if r:
             return r
         else:
@@ -82,12 +86,15 @@ class DB:
         table = sql.Identifier(table)
         proxy = sql.Identifier(proxy)
         commonTable = sql.Identifier(commonTable)
-
-        self.cur.execute(
-            sql.SQL('SELECT {}.* FROM {},{} WHERE {}.{}=%s and {}.id={}.{}').format(table, table, proxy,
-                                                                                    proxy, commonTable, table,
-                                                                                    proxy, table), (id,))
-        r = self.cur.fetchall()
+        try:
+            self.cur.execute(
+                sql.SQL('SELECT {}.* FROM {},{} WHERE {}.{}=%s and {}.id={}.{}').format(table, table, proxy,
+                                                                                        proxy, commonTable, table,
+                                                                                        proxy, table), (id,))
+            r = self.cur.fetchall()
+        except Exception as e:
+            print(f"[SAKURA] An error occurred with the db: {e}")
+            self.conn.rollback()
         if r:
             return r
         else:
@@ -108,10 +115,13 @@ class DB:
             else:
                 condition.append(sql.Identifier(filter[i]))
                 condition.append(sql.SQL(filter[i+1]+" %s"))
-
-        query = sql.SQL('SELECT * FROM {} WHERE {condition}').format(sql.Identifier(table), condition=sql.SQL(' ').join(condition))
-        self.cur.execute(query, values)
-        r = self.cur.fetchall()
+        try:
+            query = sql.SQL('SELECT * FROM {} WHERE {condition}').format(sql.Identifier(table), condition=sql.SQL(' ').join(condition))
+            self.cur.execute(query, values)
+            r = self.cur.fetchall()
+        except Exception as e:
+            print(f"[SAKURA] An error occurred with the db: {e}")
+            self.conn.rollback()
         if r:
             return r
         else:
