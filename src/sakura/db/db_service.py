@@ -57,13 +57,13 @@ class DB:
             self.cur.execute(
                 sql.SQL('SELECT * FROM {} WHERE {} = %s').format(sql.Identifier(table), sql.Identifier(selector)), (id,))
             r = self.cur.fetchone()
+            if r:
+                return r
+            else:
+                return []
         except Exception as e:
             print(f"[SAKURA] An error occurred with the db: {e}")
             self.conn.rollback()
-        if r:
-            return r
-        else:
-            return
 
     def getSomethingProxied(self, table, proxy, commonTable, id):
         '''
@@ -92,13 +92,13 @@ class DB:
                                                                                         proxy, commonTable, table,
                                                                                         proxy, table), (id,))
             r = self.cur.fetchall()
+            if r:
+                return r
+            else:
+                return []
         except Exception as e:
             print(f"[SAKURA] An error occurred with the db: {e}")
             self.conn.rollback()
-        if r:
-            return r
-        else:
-            return
 
 
     def getFilters(self, table, filter):
@@ -119,13 +119,13 @@ class DB:
             query = sql.SQL('SELECT * FROM {} WHERE {condition}').format(sql.Identifier(table), condition=sql.SQL(' ').join(condition))
             self.cur.execute(query, values)
             r = self.cur.fetchall()
+            if r:
+                return r
+            else:
+                return []
         except Exception as e:
             print(f"[SAKURA] An error occurred with the db: {e}")
             self.conn.rollback()
-        if r:
-            return r
-        else:
-            return []
 
     def insertDict(self, table, dict, getId=False):
         cols = []
