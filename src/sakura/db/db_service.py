@@ -108,13 +108,19 @@ class DB:
         condition = []
         values = []
         for i in range(0, len(filter), 4):
-            values.append(filter[i+2])
+            if filter[i+1].upper() == 'IN':
+                values += filter[i+2]
+                placeholders = ','.join(['%s'] * len(filter[i+2]))
+                placeholders = " (" + placeholders + ")"
+            else:
+                values.append(filter[i+2])
+                placeholders = " %s"
             if i+4 <= len(filter):
                 condition.append(sql.Identifier(filter[i]))
-                condition.append(sql.SQL(filter[i+1]+" %s "+filter[i+3]))
+                condition.append(sql.SQL(filter[i+1]+placeholders+" "+filter[i+3]))
             else:
                 condition.append(sql.Identifier(filter[i]))
-                condition.append(sql.SQL(filter[i+1]+" %s"))
+                condition.append(sql.SQL(filter[i+1]+placeholders))
         try:
             query = sql.SQL('SELECT * FROM {} WHERE {condition}').format(sql.Identifier(table), condition=sql.SQL(' ').join(condition))
             self.cur.execute(query, values)
