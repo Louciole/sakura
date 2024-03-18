@@ -82,6 +82,7 @@ class Server:
         if str(actual["code"]) == code and actual["expiration"] > datetime.datetime.now():
             self.uniauth.edit("account", user, "verified", True)
             self.createJwt(user, True)
+            self.onLogin(user)
             return "ok"
         else:
             return "Code erroné"
