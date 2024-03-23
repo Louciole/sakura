@@ -41,6 +41,9 @@ class Server:
 
         if noStart:
             return
+
+        self.onStart()
+
         self.start()
 
     #-----------------------UNIAUTH RELATED METHODS-----------------------------
@@ -193,6 +196,9 @@ class Server:
             return "invalid email or password"
 
     def onLogin(self, uid):
+        pass
+
+    def onStart(self, uid):
         pass
 
     #--------------------------GENERAL USE METHODS------------------------------
