@@ -198,7 +198,7 @@ class Server:
     def onLogin(self, uid):
         pass
 
-    def onStart(self, uid):
+    def onStart(self):
         pass
 
     #--------------------------GENERAL USE METHODS------------------------------
