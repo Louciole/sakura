@@ -65,6 +65,19 @@ class DB:
             print(f"[SAKURA] An error occurred with the db: {e}")
             self.conn.rollback()
 
+    def getAll(self, table, id, selector='id'):
+        try:
+            self.cur.execute(
+                sql.SQL('SELECT * FROM {} WHERE {} = %s').format(sql.Identifier(table), sql.Identifier(selector)), (id,))
+            r = self.cur.fetchall()
+            if r:
+                return r
+            else:
+                return []
+        except Exception as e:
+            print(f"[SAKURA] An error occurred with the db: {e}")
+            self.conn.rollback()
+
     def getSomethingProxied(self, table, proxy, commonTable, id):
         '''
         Get something described by a ManyToMany relation
