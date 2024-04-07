@@ -114,11 +114,14 @@ class DB:
             self.conn.rollback()
 
 
-    def getFilters(self, table, filter):
+    def getFilters(self, table, filter, basis = None):
         # this take a filter in the following format
         # [identifier, operation, value, AND/OR... if relevant, ...]
 
-        condition = []
+        if basis:
+            condition = [sql.SQL(basis)]
+        else:
+            condition = []
         values = []
         for i in range(0, len(filter), 4):
             if filter[i+1].upper() == 'IN':
