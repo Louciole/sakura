@@ -45,7 +45,7 @@ class Mailing:
             self.restart()
         try:
             self.smtp.send_message(content)
-            print("[Sakura - mails] mail sent",content)
+            print("[Sakura - mails] mail sent")
         except smtplib.SMTPException as e:
             print(f"Error sending a mail : {e}")
 
