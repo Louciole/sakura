@@ -29,3 +29,16 @@ then
   sudo -u postgres createdb $dbName
 fi
 python3 ./db/initDB.py $uniauth
+echo ----------------------------ADDING A NGINX CONF-------------------------
+echo 'do you want to add a configuration in nginx? (y/n)'
+read nginx
+if [ $nginx == 'y' ] || [ $nginx == 'Y' ]
+then 
+  sudo apt install nginx
+  sudo systemctl start nginx
+  echo 'what name you want for your conf? (without the .conf)'
+  read nginxName
+  sudo cp ./misc/nginx.conf /etc/nginx/sites-available/$nginxName.conf
+  sudo ln -s /etc/nginx/sites-available/$nginxName.conf /etc/nginx/sites-enabled/$nginxName.conf
+  sudo systemctl reload nginx
+fi
