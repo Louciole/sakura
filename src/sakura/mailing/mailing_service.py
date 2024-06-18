@@ -49,6 +49,26 @@ class Mailing:
         except smtplib.SMTPException as e:
             print(f"Error sending a mail : {e}")
 
+    def sendTemplate(self,template,target,subject,text):
+        try:
+            self.templates[template]
+        except:
+            f = open(self.path + "/mailing/" + template, "r")
+            self.templates[template] = f.read()
+            f.close()
+
+        mail_confirmation = MIMEMultipart('alternative')
+        mail_confirmation['Subject'] = subject
+        mail_confirmation['From'] = self.name + " <" + self.address + ">"
+        mail_confirmation['Message-ID'] = email.utils.make_msgid(domain='carbonlab.dev')
+        mail_confirmation['Date'] = email.utils.formatdate()
+        part1 = MIMEText(text, 'plain')
+        part2 = MIMEText(self.templates[template], 'html')
+        mail_confirmation.attach(part1)
+        mail_confirmation.attach(part2)
+        mail_confirmation['To'] = target  # ATTENTION CE N'EST PAS UNE COPIE CACHEE
+        self.signMail(mail_confirmation)
+        self.sendMail(mail_confirmation)
 
     def signMail(self, mail):
         headers = ["To", "From", "Subject"]
