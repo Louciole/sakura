@@ -82,7 +82,8 @@ class Server:
                 print("AHHH", e)
                 response.code=500
                 response.content=e
-                return str(response)
+                response.ok()
+                return response.encode()
 
         name = func.__name__
         if func.__name__ == "index":
@@ -109,8 +110,8 @@ class Server:
 
         else:
             response.code=404
-            return str(response)
-
+            response.ok()
+            return response.encode()
 
 
     #-----------------------UNIAUTH RELATED METHODS-----------------------------
@@ -310,11 +311,11 @@ class Response:
         self.content=""
 
     def ok(self):
-        self.start_response(self.CODES[self.code], self.headers)
-
-    def __str__(self):
         if self.code != 200:
             self.headers=[('Content-Type', 'text/plain')]
+        self.start_response(self.CODES[self.code], self.headers)
+
+    def encode(self):
         return (self.CODES[self.code] + str(self.content)).encode()
 
     def set_cookie(self, path=None, path_header=None, name='session_id',

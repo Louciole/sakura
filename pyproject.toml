@@ -24,7 +24,7 @@ dependencies = [
 license = {file = "LICENSE.md"}
 classifiers = [
     "Programming Language :: Python :: 3",
-    "Operating System :: DEBIAN",
+    "Operating System :: OS Independent",
 ]
 
 [project.urls]
