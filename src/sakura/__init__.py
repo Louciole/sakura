@@ -118,12 +118,12 @@ class Server:
 
     @expose
     def auth(self, parrain=None):
-        return open(self.path + "/ressources/home/auth.html")
+        return open(self.path + "/static/home/auth.html").read()
 
     @expose
     def verif(self):
         self.checkJwt(verif=True)
-        return open(self.path + "/ressources/home/verif.html")
+        return open(self.path + "/static/home/verif.html").read()
 
     @expose
     def resendVerif(self):
