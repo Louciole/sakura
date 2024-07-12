@@ -7,9 +7,9 @@ packages = ["src/sakura"]
 
 [project]
 name = "sakura"
-version = "1.0.0"
+version = "1.0.1"
 authors = [
-    { name="Lou ! ", email="lou@carbonlab.dev" },
+    {name="Lou ! ", email="lou@carbonlab.dev" },
 ]
 description = "An extensive web framework adding every feature needed for Carbonlab"
 readme = "README.md"
@@ -19,7 +19,9 @@ dependencies = [
     "configparser",
     "bcrypt",
     "PyJWT",
-    "dkimpy"
+    "dkimpy",
+    "websockets",
+    "multipart"
 ]
 license = {file = "LICENSE.md"}
 classifiers = [

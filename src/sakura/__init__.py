@@ -15,18 +15,20 @@
 
 ________________________________________________________________________________________________________________________
 """
-import urllib.parse
+
 # stdlibs
-from os.path import abspath, dirname
 import datetime
 import json
 import inspect
+import asyncio
+import threading
 
 import re
 import fastwsgi
 import bcrypt
 import jwt
 from configparser import ConfigParser
+import websockets
 
 #requests modules
 import multipart as mp
@@ -70,7 +72,6 @@ class Server:
         if noStart:
             return
 
-        self.onStart()
         self.start()
 
     #----------------------------HTTP SERVER------------------------------------
@@ -313,9 +314,100 @@ class Server:
             print("please create a config file")
 
     def start(self):
+        self.id = 1  # TODO give a different id to each server to allow them to contact eachother
+        self.pool = {}
+        self.wating_clients = {}
+        self.currentWaiting = 0
+        self.stop_event = asyncio.Event()
+        websocket_thread = threading.Thread(target=self.startWebSockets)
+        websocket_thread.start()
+
+        self.onStart()
+
         fastwsgi.run(wsgi_app=self.onrequest, host=self.config.get('server', 'IP'),
                      port=int(self.config.get('server', 'PORT')))
         #TODO add 404 page
+        #TODO add control over optional parameters (websockets)
+
+    def startWebSockets(self):
+        asyncio.run(self.runWebsockets())
+
+    async def runWebsockets(self):
+        async with websockets.serve(self.handle_message, self.config.get("server", "IP"),
+                                    int(self.config.get("NOTIFICATION", "PORT"))):
+            stop_event_task = asyncio.create_task(self.stop_event.wait())
+            await asyncio.wait([stop_event_task], return_when=asyncio.FIRST_COMPLETED)
+
+    def closeWebSockets(self):
+        self.stop_event.set()
+        print("[INFO] WS server closed")
+
+    def stop(self):
+        for client, ws in self.pool.items():
+            self.db.deleteSomething("active_client",client)
+        print("[INFO] cleaned database")
+
+    # --------------------------------WEBSOCKETS--------------------------------
+
+    async def handle_message(self, websocket):
+        async for message in websocket:
+            data = json.loads(message)
+
+            match data["type"]:
+                case _:
+                    print("unknown message received", message)
+
+    @expose
+    def authWS(self, connectionId):
+        account_id = self.getUser()
+        if self.wating_clients[int(connectionId)]["uid"] != account_id:
+            return "forbidden"
+
+        connection = self.db.insertDict("active_client", {"userid": account_id, "server": self.id}, True)
+        self.pool[connection] = self.wating_clients[int(connectionId)]["connection"]
+        del self.wating_clients[int(connectionId)]
+        return str(connection)
+
+    async def sendNotificationAsync(self, account, content):
+        message = {"type": "notif", "content": content}
+
+        clients = self.db.getAll("active_client", account, "userid")
+        for client in clients:
+            #TODO handle multi server
+            if self.pool.get(client["id"]):
+                websocket = self.pool[client["id"]]
+                try:
+                    await websocket.send(json.dumps(message))
+                except Exception as e:
+                    print("exception sending a message on a ws", e)
+                    del self.pool[client["id"]]
+                    self.db.deleteSomething("active_client", client["id"])
+            else:
+                self.db.deleteSomething("active_client", client["id"])
+
+    def checkWSAuth(self, ws, clientID):
+        if self.pool.get(clientID) == ws:
+            return True
+        return False
+
+    def sendNotification(self, account, content):
+        message = {"type": "notif", "content": content}
+        async def ws_send(message):
+            await websocket.send(message)
+
+        clients = self.db.getAll("active_client", account, "userid")
+        for client in clients:
+            #TODO handle multi server
+            if self.pool.get(client["id"]):
+                websocket = self.pool[client["id"]]
+                try:
+                    asyncio.run(ws_send(json.dumps(message)))
+                except Exception as e:
+                    print("exception sending a message on a ws", e)
+                    del self.pool[client["id"]]
+                    self.db.deleteSomething("active_client", client["id"])
+            else:
+                self.db.deleteSomething("active_client", client["id"])
 
 
 class Response:
