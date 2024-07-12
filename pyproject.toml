@@ -7,15 +7,15 @@ packages = ["src/sakura"]
 
 [project]
 name = "sakura"
-version = "0.1.2"
+version = "1.0.0"
 authors = [
     { name="Lou ! ", email="lou@carbonlab.dev" },
 ]
-description = "A wrapper framework for cherry py adding every feature needed for Carbonlab"
+description = "An extensive web framework adding every feature needed for Carbonlab"
 readme = "README.md"
 requires-python = ">=3.8"
 dependencies = [
-    "cherrypy",
+    "fastwsgi",
     "configparser",
     "bcrypt",
     "PyJWT",

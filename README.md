@@ -1,12 +1,21 @@
-# Sakura 🍒
+# Sakura V1 - Harpie 🍒
 
-A wrapper framework for cherry-py adding every feature needed for Carbonlab
+❓ An extensive and fast web framework adding every feature needed for Carbonlab
 
-## Install
+## ⏬ Install
 
 `pip install git+https://gitlab.com/Louciole/sakura.git/`
 
-## Build from sources
+## 🤓 Learn
+
+Read the docs from https://louciole.gitlab.io/sakura-docs/
+
+## 👼 Create new project
+
+`git clone git@gitlab.com:Louciole/emptysakura.git
+`
+
+## 📁 Build from sources
 
 `python3 -m pip install --upgrade build`
 
@@ -14,7 +23,5 @@ A wrapper framework for cherry-py adding every feature needed for Carbonlab
 
 `pip install PATH-TO-HERE/dist/sakura-0.1.2-py3-none-any.whl`
 
-## Create new project
-
-`git clone git@gitlab.com:Louciole/emptysakura.git
-`
+## 🕰️ LEGACY
+If you care about the cherrypy version please look to the v0 branch
