@@ -1,6 +1,6 @@
-# Sakura 🍒
+# Sakura V1 - Harpie 🍒
 
-An extensive web framework adding every feature needed for Carbonlab
+An extensive and fast web framework adding every feature needed for Carbonlab
 
 ## Install
 
