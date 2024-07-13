@@ -342,7 +342,18 @@ class Server:
         fastwsgi.server.hook_sigint = 1
         fastwsgi.run(wsgi_app=self.onrequest, host=self.config.get('server', 'IP'),
                      port=int(self.config.get('server', 'PORT')))
+        self.close()
+
+    def close(self):
+        print("[INFO] SIGTERM/SIGINT received")
+
+        fastwsgi.server.close()
+        if self.features.get("websockets"):
+            self.closeWebSockets()
+
         self.clean()
+        print("[INFO] SERVER STOPPED")
+        exit()
 
     def startWebSockets(self):
         asyncio.run(self.runWebsockets())
@@ -358,15 +369,7 @@ class Server:
         print("[INFO] WS server closed")
 
     def clean(self):
-        print("[INFO] SIGTERM/SIGINT received")
-
-        fastwsgi.server.close()
-        if self.features.get("websockets"):
-            self.closeWebSockets()
-
-        self.stop()
-        print("[INFO] SERVER STOPPED")
-        exit(1)
+        pass
 
     def stop(self):
         fastwsgi.server.close()
