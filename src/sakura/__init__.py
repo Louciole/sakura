@@ -85,8 +85,8 @@ class Server:
             # res=res
             self.response.ok()
             if res:
-                res.encode()
-                return res
+
+                return res.encode()
             else:
                 return "".encode()
 
