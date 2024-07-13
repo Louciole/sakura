@@ -48,26 +48,28 @@ routes = {}
 
 
 class Server:
+    features = {}
+
     def __init__(self, path, configFile, noStart=False):
-        print("starting Sakura server...")
+        print("[INFO] starting Sakura server...")
         self.path = path
 
         self.importConf(configFile)
         self.db = db.DB(user=self.config.get('DB', 'DB_USER'), password=self.config.get('DB', 'DB_PASSWORD'),
                         host=self.config.get('DB', 'DB_HOST'), port=int(self.config.get('DB', 'DB_PORT')),
                         db=self.config.get('DB', 'DB_NAME'))
-        print("successfully connected to postgresql!")
+        print("[INFO] successfully connected to postgresql!")
         self.uniauth = db.DB(user=self.config.get('DB', 'DB_USER'), password=self.config.get('DB', 'DB_PASSWORD'),
                              host=self.config.get('UNIAUTH', 'DB_HOST'),
                              port=int(self.config.get('UNIAUTH', 'DB_PORT')), db=self.config.get('UNIAUTH', 'DB_NAME'))
-        print("successfully connected to uniauth!")
+        print("[INFO] successfully connected to uniauth!")
 
         if not self.config.getboolean("server", "DEBUG"):
             self.noreply = mailing.Mailing(self.config.get('MAILING', 'MAILING_HOST'),
                                            self.config.get('MAILING', 'MAILING_PORT'),
                                            "noreply@carbonlab.dev", self.config.get('MAILING', 'NOREPLY_PASSWORD'),
                                            self.config.get("server", "SERVICE_NAME"), self.path)
-            print("successfully connected to the mailing service!")
+            print("[INFO] successfully connected to the mailing service!")
 
         if noStart:
             return
@@ -77,10 +79,16 @@ class Server:
     #----------------------------HTTP SERVER------------------------------------
     def expose(func):
         def wrapper(self, *args, **kwargs):
-            res = func(self, *args, **kwargs).encode()
+
+            res = func(self, *args, **kwargs)
+
             # res=res
             self.response.ok()
-            return res
+            if res:
+                res.encode()
+                return res
+            else:
+                return "".encode()
 
         name = func.__name__
         if func.__name__ == "index":
@@ -134,10 +142,10 @@ class Server:
             except (HTTPError, HTTPRedirect):
                 return self.response.encode()
             except Exception as e:
-                print("UNEXPECTED ERROR :", e)
+                print("[ERROR] Sakura - UNEXPECTED ERROR :", e)
                 self.response.code = 500
                 self.response.ok()
-                self.response.content = e
+                self.response.content = str(e)
                 return self.response.encode()
         else:
             self.response.code = 404
@@ -309,25 +317,32 @@ class Server:
         self.config = ConfigParser()
         try:
             self.config.read(self.path + configFile)
-            print("config at " + self.path + configFile + " loaded")
+            print("[INFO] Sakura - config at " + self.path + configFile + " loaded")
         except Exception:
-            print("please create a config file")
+            print("[ERROR] Sakura - Please create a config file")
 
     def start(self):
-        self.id = 1  # TODO give a different id to each server to allow them to contact eachother
-        self.pool = {}
-        self.wating_clients = {}
-        self.currentWaiting = 0
-        self.stop_event = asyncio.Event()
-        websocket_thread = threading.Thread(target=self.startWebSockets)
-        websocket_thread.start()
+
+        if self.features.get("websockets"):
+            self.id = 1  # TODO give a different id to each server to allow them to contact eachother
+            self.pool = {}
+            self.wating_clients = {}
+            self.currentWaiting = 0
+            self.stop_event = asyncio.Event()
+            websocket_thread = threading.Thread(target=self.startWebSockets)
+            websocket_thread.start()
+            print("[INFO] Sakura - WS server started")
+
+        if self.features.get("errors"):
+            for code, page in self.features["errors"].items():
+                Response.ERROR_PAGES[code] = self.path + page
 
         self.onStart()
 
+        fastwsgi.server.hook_sigint = 1
         fastwsgi.run(wsgi_app=self.onrequest, host=self.config.get('server', 'IP'),
                      port=int(self.config.get('server', 'PORT')))
-        #TODO add 404 page
-        #TODO add control over optional parameters (websockets)
+        self.clean()
 
     def startWebSockets(self):
         asyncio.run(self.runWebsockets())
@@ -342,20 +357,24 @@ class Server:
         self.stop_event.set()
         print("[INFO] WS server closed")
 
+    def clean(self):
+        print("[INFO] SIGTERM/SIGINT received")
+
+        fastwsgi.server.close()
+        if self.features.get("websockets"):
+            self.closeWebSockets()
+
+        self.stop()
+        print("[INFO] SERVER STOPPED")
+        exit(1)
+
     def stop(self):
+        fastwsgi.server.close()
         for client, ws in self.pool.items():
-            self.db.deleteSomething("active_client",client)
+            self.db.deleteSomething("active_client", client)
         print("[INFO] cleaned database")
 
     # --------------------------------WEBSOCKETS--------------------------------
-
-    async def handle_message(self, websocket):
-        async for message in websocket:
-            data = json.loads(message)
-
-            match data["type"]:
-                case _:
-                    print("unknown message received", message)
 
     @expose
     def authWS(self, connectionId):
@@ -379,7 +398,7 @@ class Server:
                 try:
                     await websocket.send(json.dumps(message))
                 except Exception as e:
-                    print("exception sending a message on a ws", e)
+                    print("[ERROR] Sakura - exception sending a message on a ws", e)
                     del self.pool[client["id"]]
                     self.db.deleteSomething("active_client", client["id"])
             else:
@@ -392,6 +411,7 @@ class Server:
 
     def sendNotification(self, account, content):
         message = {"type": "notif", "content": content}
+
         async def ws_send(message):
             await websocket.send(message)
 
@@ -403,7 +423,7 @@ class Server:
                 try:
                     asyncio.run(ws_send(json.dumps(message)))
                 except Exception as e:
-                    print("exception sending a message on a ws", e)
+                    print("[ERROR] Sakura - exception sending a message on a ws", e)
                     del self.pool[client["id"]]
                     self.db.deleteSomething("active_client", client["id"])
             else:
@@ -412,9 +432,11 @@ class Server:
 
 class Response:
     CODES = {200: "200 OK", 404: "404 Not Found", 500: "500 Server Error", 302: "302 Redirect"}
+    ERROR_PAGES = {}
 
     def __init__(self, start_response, code=200, type="html"):
         self.cookies = {}
+        self.type = type
         self.headers = [('Content-Type', 'text/' + type)]
         self.code = code
         self.start_response = start_response
@@ -422,11 +444,17 @@ class Response:
 
     def ok(self):
         if self.code != 200 and self.code != 302:
-            self.headers = [('Content-Type', 'text/plain')]
+            if self.code not in self.ERROR_PAGES.keys():
+                self.type = "plain"
+                self.headers = [('Content-Type', 'text/plain')]
+            else:
+                self.content = open(self.ERROR_PAGES[self.code]).read()
         self.start_response(self.CODES.get(self.code, "500 UNEXPECTED"), self.headers)
 
     def encode(self):
-        return (self.CODES[self.code] + " " + str(self.content)).encode()
+        if self.type == "plain":
+            return (self.CODES[self.code] + " " + self.content).encode()
+        return str(self.content).encode()
 
     def set_cookie(self, name, value, exp=None, samesite=None, secure=False, httponly=False):
         """Set a response cookie for the client.
