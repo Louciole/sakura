@@ -81,6 +81,7 @@ class Server:
         def wrapper(self, *args, **kwargs):
 
             res = func(self, *args, **kwargs)
+            # print("[DEBUG] res : ", res)
 
             # res=res
             self.response.ok()
@@ -236,7 +237,7 @@ class Server:
             elif verif and info['verified']:
                 raise HTTPRedirect(self.response, self.config.get("server", "DEFAULT_ENDPOINT"))
         except jwt.ExpiredSignatureError:
-            raise HTTPRedirect("/auth")
+            raise HTTPRedirect(self.response,"/auth")
         except jwt.DecodeError:
             raise HTTPError(self.response, 400, 'ERROR : INVALID TOKEN')
 
@@ -455,6 +456,8 @@ class Response:
         self.start_response(self.CODES.get(self.code, "500 UNEXPECTED"), self.headers)
 
     def encode(self):
+        # print("[INFO] encoding response : ", self.content)
+
         if self.type == "plain":
             return (self.CODES[self.code] + " " + self.content).encode()
         return str(self.content).encode()
