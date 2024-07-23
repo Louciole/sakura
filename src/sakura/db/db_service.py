@@ -128,6 +128,12 @@ class DB:
                 values += filter[i+2]
                 placeholders = ','.join(['%s'] * len(filter[i+2]))
                 placeholders = " (" + placeholders + ")"
+            elif filter[i+2] == None:
+                placeholders = " NULL"
+            elif filter[i+2] == True:
+                placeholders = " true"
+            elif filter[i+2] == False:
+                placeholders = " false"
             else:
                 values.append(filter[i+2])
                 placeholders = " %s"
@@ -158,10 +164,10 @@ class DB:
         cols_str = sql.SQL(',').join(cols)
         vals_str = sql.SQL(','.join(['%s' for i in range(len(vals))]))
         if getId:
-            sql_str = sql.SQL("INSERT INTO {} ({}) VALUES ({}) RETURNING id").format(sql.Identifier(table), cols_str,
-                                                                                     vals_str)
+            sql_str = sql.SQL("INSERT INTO {} ({}) VALUES ({}) RETURNING id ON CONFLICT DO NOTHING").format(sql.Identifier(table), cols_str,
+                                                                                                            vals_str)
         else:
-            sql_str = sql.SQL("INSERT INTO {} ({}) VALUES ({})").format(sql.Identifier(table), cols_str, vals_str)
+            sql_str = sql.SQL("INSERT INTO {} ({}) VALUES ({}) ON CONFLICT DO NOTHING").format(sql.Identifier(table), cols_str, vals_str)
         self.cur.execute(sql_str, vals)
         self.conn.commit()
         if getId:
@@ -192,14 +198,14 @@ class DB:
         self.cur.execute(sql_str)
         self.conn.commit()
 
-    def edit(self, table, id, element, value):
+    def edit(self, table, id, element, value, selector='id'):
         self.cur.execute(
-            sql.SQL("UPDATE {} SET {} = %s WHERE id = %s ").format(sql.Identifier(table), sql.Identifier(element)),
+            sql.SQL("UPDATE {} SET {} = %s WHERE {} = %s ").format(sql.Identifier(table), sql.Identifier(element), sql.Identifier(selector)),
             (value, id))
         self.conn.commit()
 
-    def deleteSomething(self, table, id):
-        sql_str = sql.SQL("delete from {} where id = %s").format(sql.Identifier(table))
+    def deleteSomething(self, table, id, selector='id'):
+        sql_str = sql.SQL('DELETE FROM {} WHERE {} = %s').format(sql.Identifier(table), sql.Identifier(selector))
         self.cur.execute(sql_str, (id,))
         self.conn.commit()
 
