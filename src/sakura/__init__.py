@@ -22,8 +22,12 @@ import json
 import inspect
 import asyncio
 import threading
+import os
+import time
 
 import re
+import urllib
+
 import fastwsgi
 import bcrypt
 import jwt
@@ -127,7 +131,7 @@ class Server:
                 query = re.split(RE_URL, environ['QUERY_STRING'])
                 for i in range(0, len(query)):
                     query[i] = re.split(RE_PARAM, query[i])
-                    args[query[i][0]] = query[i][1]
+                    args[query[i][0]] = urllib.parse.unquote(query[i][1])
             if content_type[0] == "multipart/form-data":
                 length = int(environ.get('CONTENT_LENGTH'))
                 body = environ['wsgi.input'].read(length)
@@ -340,9 +344,17 @@ class Server:
 
         self.onStart()
 
+        fastwsgi.server.nowait = 1
         fastwsgi.server.hook_sigint = 1
-        fastwsgi.run(wsgi_app=self.onrequest, host=self.config.get('server', 'IP'),
-                     port=int(self.config.get('server', 'PORT')))
+
+        print("[INFO] Sakura - server running on PID:", os.getpid())
+        fastwsgi.server.init(app=self.onrequest, host=self.config.get('server', 'IP'),
+                             port=int(self.config.get('server', 'PORT')))
+        while True:
+            code = fastwsgi.server.run()
+            if code != 0:
+                break
+            time.sleep(0)
         self.close()
 
     def close(self):
@@ -359,11 +371,17 @@ class Server:
     def startWebSockets(self):
         asyncio.run(self.runWebsockets())
 
+    async def handle_message(self,websocket):
+        pass
+
     async def runWebsockets(self):
-        async with websockets.serve(self.handle_message, self.config.get("server", "IP"),
-                                    int(self.config.get("NOTIFICATION", "PORT"))):
-            stop_event_task = asyncio.create_task(self.stop_event.wait())
-            await asyncio.wait([stop_event_task], return_when=asyncio.FIRST_COMPLETED)
+        try :
+            async with websockets.serve(self.handle_message, self.config.get("server", "IP"),
+                                        int(self.config.get("NOTIFICATION", "PORT"))):
+                stop_event_task = asyncio.create_task(self.stop_event.wait())
+                await asyncio.wait([stop_event_task], return_when=asyncio.FIRST_COMPLETED)
+        except Exception as e:
+            print("[ERROR] Sakura - exception in ws server", e)
 
     def closeWebSockets(self):
         self.stop_event.set()

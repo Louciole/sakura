@@ -16,7 +16,6 @@ class Mailing:
             self.smtp.ehlo()  # send the extended hello to our server
             self.smtp.starttls()
             self.address = address
-            self.password = password
             self.smtp.login(address, password)
             self.path = path
             with open(self.path + "/mailing/dkim.txt") as fh:

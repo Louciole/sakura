@@ -130,9 +130,9 @@ class DB:
                 placeholders = " (" + placeholders + ")"
             elif filter[i+2] == None:
                 placeholders = " NULL"
-            elif filter[i+2] == True:
+            elif filter[i+2] == "true":
                 placeholders = " true"
-            elif filter[i+2] == False:
+            elif filter[i+2] == "false":
                 placeholders = " false"
             else:
                 values.append(filter[i+2])
@@ -164,8 +164,8 @@ class DB:
         cols_str = sql.SQL(',').join(cols)
         vals_str = sql.SQL(','.join(['%s' for i in range(len(vals))]))
         if getId:
-            sql_str = sql.SQL("INSERT INTO {} ({}) VALUES ({}) RETURNING id ON CONFLICT DO NOTHING").format(sql.Identifier(table), cols_str,
-                                                                                                            vals_str)
+            sql_str = sql.SQL("INSERT INTO {} ({}) VALUES ({}) ON CONFLICT DO NOTHING RETURNING id ").format(sql.Identifier(table), cols_str,
+                                                                                                             vals_str)
         else:
             sql_str = sql.SQL("INSERT INTO {} ({}) VALUES ({}) ON CONFLICT DO NOTHING").format(sql.Identifier(table), cols_str, vals_str)
         self.cur.execute(sql_str, vals)
