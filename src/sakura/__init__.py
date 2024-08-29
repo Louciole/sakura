@@ -132,7 +132,7 @@ class Server:
                 length = int(environ.get('CONTENT_LENGTH'))
                 body = environ['wsgi.input'].read(length)
                 sep = content_type[1].split("=")[1]
-                body = mp.MultipartParser(BytesIO(body), sep)
+                body = mp.MultipartParser(BytesIO(body), sep.encode('utf-8'))
                 for part in body.parts():
                     args[part.name] = part.value
 
