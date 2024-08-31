@@ -407,10 +407,10 @@ class Server:
         connection = self.db.insertDict("active_client", {"userid": account_id, "server": self.id}, True)
         self.pool[connection] = self.waiting_clients[int(connectionId)]["connection"]
         del self.waiting_clients[int(connectionId)]
-        self.onWSAuth()
+        self.onWSAuth(account_id)
         return str(connection)
 
-    def onWSAuth(self):
+    def onWSAuth(self,uid):
         pass
 
     async def sendNotificationAsync(self, account, content):
