@@ -331,7 +331,7 @@ class Server:
         if self.features.get("websockets"):
             self.id = 1  # TODO give a different id to each server to allow them to contact eachother
             self.pool = {}
-            self.wating_clients = {}
+            self.waiting_clients = {}
             self.currentWaiting = 0
             self.stop_event = asyncio.Event()
             websocket_thread = threading.Thread(target=self.startWebSockets)
@@ -401,12 +401,12 @@ class Server:
     @expose
     def authWS(self, connectionId):
         account_id = self.getUser()
-        if self.wating_clients[int(connectionId)]["uid"] != account_id:
+        if self.waiting_clients[int(connectionId)]["uid"] != account_id:
             return "forbidden"
 
         connection = self.db.insertDict("active_client", {"userid": account_id, "server": self.id}, True)
-        self.pool[connection] = self.wating_clients[int(connectionId)]["connection"]
-        del self.wating_clients[int(connectionId)]
+        self.pool[connection] = self.waiting_clients[int(connectionId)]["connection"]
+        del self.waiting_clients[int(connectionId)]
         return str(connection)
 
     async def sendNotificationAsync(self, account, content):
