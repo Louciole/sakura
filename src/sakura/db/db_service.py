@@ -155,18 +155,6 @@ class DB:
             print(f"[SAKURA] An error occurred with the db: {e}")
             self.conn.rollback()
 
-    def execFetch(self, query, values):
-        try:
-            self.cur.execute(query, values)
-            r = self.cur.fetchall()
-            if r:
-                return r
-            else:
-                return []
-        except Exception as e:
-            print(f"[SAKURA] An error occurred with the db: {e}")
-            self.conn.rollback()
-
     def insertDict(self, table, dict, getId=False):
         cols = []
         vals = []
