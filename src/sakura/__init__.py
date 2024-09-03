@@ -369,21 +369,30 @@ class Server:
         exit()
 
     def startWebSockets(self):
-        asyncio.run(self.runWebsockets())
+        server = threading.Thread(target=self.runWebsockets, daemon=True)
+        server.start()
 
     async def handle_message(self,websocket):
         pass
 
-    async def runWebsockets(self):
+    def runWebsockets(self):
         try :
-            async with websockets.serve(self.handle_message, self.config.get("server", "IP"),
-                                        int(self.config.get("NOTIFICATION", "PORT"))):
-                stop_event_task = asyncio.create_task(self.stop_event.wait())
-                await asyncio.wait([stop_event_task], return_when=asyncio.FIRST_COMPLETED)
+            loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(loop)
+            ws_server = websockets.serve(self.handle_message, self.config.get("server", "IP"),
+                                         int(self.config.get("NOTIFICATION", "PORT")))
+
+            loop.run_until_complete(ws_server)
+            loop.run_forever() # this is missing
+            loop.close()
+
         except Exception as e:
             print("[ERROR] Sakura - exception in ws server", e)
 
     def closeWebSockets(self):
+        for client, ws in self.pool.items():
+            # Close the websocket connection
+            asyncio.run_coroutine_threadsafe(ws.close(), asyncio.get_event_loop())
         self.stop_event.set()
         print("[INFO] WS server closed")
 
