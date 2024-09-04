@@ -161,7 +161,11 @@ class Server:
 
     @expose
     def auth(self, parrain=None):
-        return open(self.path + "/static/home/auth.html").read()
+        return (open(self.path + "/static/home/auth.html").read() )
+
+    @expose
+    def reset(self, email):
+        return open(self.path + "/static/home/reset.html").read()
 
     @expose
     def verif(self):
@@ -187,6 +191,37 @@ class Server:
             msg = 'please give an email and a password'
 
         return msg
+
+    @expose
+    def changePasswordVerif(self,mail, code, password):
+        id = self.uniauth.getSomething("account", mail,"email")["id"]
+        if not id :
+            return "no account found for " + mail
+
+        password = password.encode('utf-8')
+        actual = self.uniauth.getSomething("reset_code", id)
+        if actual and str(actual["code"]) == code and actual["expiration"] > datetime.datetime.now():
+            self.changePassword(id, password)
+            return "ok"
+        else:
+            return "Code erroné"
+
+    @expose
+    def passwordReset(self, email):
+        account = self.uniauth.getUserCredentials(email)
+        # If account exists in accounts table
+        if account:
+            OTP = self.generateOTP(12)
+            expiration = datetime.datetime.now() + datetime.timedelta(hours=1)
+            self.uniauth.insertReplaceDict("reset_code", {"id": account["id"], "code": OTP, "expiration": expiration})
+            if not self.config.getboolean("server", "DEBUG"):
+                self.noreply.sendTemplate('mailReset', email, "Reset your password","Your reset code: "+OTP)
+            else:
+                print("RESET OTP : ", OTP)
+            return "ok"
+        else:
+            return "no account found for " + email
+
 
     @expose
     def signup(self, code):
@@ -265,11 +300,11 @@ class Server:
         else:
             print("OTP : ", OTP)
 
-    def generateOTP(self):
+    def generateOTP(self,n=6):
         digits = "0123456789"
         OTP = ""
 
-        for i in range(6):
+        for i in range(n):
             OTP += digits[math.floor(rand.random() * 10)]
 
         return OTP
@@ -285,6 +320,11 @@ class Server:
             self.uniauth.insertDict('membership', {'account': uid, 'company': pending['company']})
             self.uniauth.deleteSomething('pendingmembership', pending['id'])
         return "verif"
+
+    def changePassword(self, uid, password):
+        salt = bcrypt.gensalt()
+        hash = bcrypt.hashpw(password, salt)
+        self.uniauth.edit("account",uid, 'password', hash)
 
     def connect(self, account, password):
         result = bcrypt.checkpw(password, account["password"])

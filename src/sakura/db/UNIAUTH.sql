@@ -18,6 +18,12 @@ create table verif_code (
                             expiration timestamp NOT NULL
 );
 
+create table if not exists reset_code (
+    id integer NOT NULL PRIMARY KEY,
+    code varchar(12) NOT NULL,
+    expiration timestamp NOT NULL
+);
+
 create table companies (
                            id bigserial NOT NULL PRIMARY KEY,
                            name varchar(22) NOT NULL
