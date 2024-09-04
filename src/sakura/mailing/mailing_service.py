@@ -17,6 +17,7 @@ class Mailing:
             self.smtp.starttls()
             self.address = address
             self.smtp.login(address, password)
+            self.templates = {}
             self.path = path
             with open(self.path + "/mailing/dkim.txt") as fh:
                 self.private = fh.read()
