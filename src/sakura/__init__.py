@@ -215,7 +215,7 @@ class Server:
             expiration = datetime.datetime.now() + datetime.timedelta(hours=1)
             self.uniauth.insertReplaceDict("reset_code", {"id": account["id"], "code": OTP, "expiration": expiration})
             if not self.config.getboolean("server", "DEBUG"):
-                self.noreply.sendTemplate('mailReset.html', email, "Reset your password","Your reset code: "+OTP)
+                self.noreply.sendTemplate('mailReset.html', email, "Reset your password","Your reset code: "+OTP, OTP)
             else:
                 print("RESET OTP : ", OTP)
             return "ok"

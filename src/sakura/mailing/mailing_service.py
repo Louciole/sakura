@@ -49,7 +49,7 @@ class Mailing:
         except smtplib.SMTPException as e:
             print(f"Error sending a mail : {e}")
 
-    def sendTemplate(self,template,target,subject,text):
+    def sendTemplate(self,template,target,subject,text,values):
         try:
             self.templates[template]
         except:
@@ -63,7 +63,7 @@ class Mailing:
         mail_confirmation['Message-ID'] = email.utils.make_msgid(domain='carbonlab.dev')
         mail_confirmation['Date'] = email.utils.formatdate()
         part1 = MIMEText(text, 'plain')
-        part2 = MIMEText(self.templates[template], 'html')
+        part2 = MIMEText(self.templates[template].format(values), 'html')
         mail_confirmation.attach(part1)
         mail_confirmation.attach(part2)
         mail_confirmation['To'] = target  # ATTENTION CE N'EST PAS UNE COPIE CACHEE
