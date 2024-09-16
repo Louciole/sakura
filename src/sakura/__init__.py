@@ -87,7 +87,6 @@ class Server:
             res = func(self, *args, **kwargs)
             # print("[DEBUG] res : ", res)
 
-            # res=res
             self.response.ok()
             if res:
 
@@ -367,6 +366,7 @@ class Server:
             print("[ERROR] Sakura - Please create a config file")
 
     def start(self):
+        self.fileCache = {}
 
         if self.features.get("websockets"):
             self.id = 1  # TODO give a different id to each server to allow them to contact eachother
@@ -428,6 +428,17 @@ class Server:
 
         except Exception as e:
             print("[ERROR] Sakura - exception in ws server", e)
+
+    def file(self,path):
+        file = self.fileCache.get(path)
+        if file:
+            return file
+        else:
+            file = open(path)
+            content = file.read()
+            file.close()
+            self.fileCache[path] = content
+            return content
 
     def closeWebSockets(self):
         for client, ws in self.pool.items():
@@ -512,7 +523,7 @@ class Response:
     def __init__(self, start_response, code=200, type="html"):
         self.cookies = {}
         self.type = type
-        self.headers = [('Content-Type', 'text/' + type)]
+        self.headers = [('Content-Type', 'text/' + type),('Cache-Control', 'no-cache')]
         self.code = code
         self.start_response = start_response
         self.content = ""
