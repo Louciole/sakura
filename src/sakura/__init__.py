@@ -21,6 +21,7 @@ import datetime
 import json
 import inspect
 import asyncio
+import secrets
 import threading
 import os
 import time
@@ -160,16 +161,16 @@ class Server:
 
     @expose
     def auth(self, parrain=None):
-        return (open(self.path + "/static/home/auth.html").read() )
+        return self.file(self.path + "/static/home/auth.html")
 
     @expose
     def reset(self, email):
-        return open(self.path + "/static/home/reset.html").read()
+        return self.file(self.path + "/static/home/reset.html")
 
     @expose
     def verif(self):
         self.checkJwt(verif=True)
-        return open(self.path + "/static/home/verif.html").read()
+        return self.file(self.path + "/static/home/verif.html")
 
     @expose
     def resendVerif(self):
@@ -201,9 +202,9 @@ class Server:
         actual = self.uniauth.getSomething("reset_code", id)
         if actual and str(actual["code"]) == code and actual["expiration"] > datetime.datetime.now():
             self.changePassword(id, password)
-            return "ok"
+            raise HTTPRedirect(self.response, "/auth")
         else:
-            return "Code erroné"
+            raise HTTPError(self.response, 401, 'Code erroné')
 
     @expose
     def passwordReset(self, email):
@@ -217,10 +218,9 @@ class Server:
                 self.noreply.sendTemplate('mailReset.html', email, "Reset your password","Your reset code: "+OTP, OTP)
             else:
                 print("RESET OTP : ", OTP)
-            return "ok"
+            raise HTTPRedirect(self.response, "/reset?email="+email)
         else:
-            return "no account found for " + email
-
+            raise HTTPError(self.response, 401, 'no account found for ' + email)
 
     @expose
     def signup(self, code):
@@ -230,15 +230,15 @@ class Server:
             self.uniauth.edit("account", user, "verified", True)
             self.createJwt(user, True)
             self.onLogin(user)
-            return "ok"
+            raise HTTPRedirect(self.response, "/channels")
         else:
-            return "Code erroné"
+            raise HTTPError(self.response, 401, 'Code erroné')
 
     @expose
     def logout(self):
         token = self.getJWT()
         self.response.del_cookie('JWT')
-        return 'ok'
+        raise HTTPRedirect(self.response, "/auth")
 
     @expose
     def goodbye(self):  #delete account
@@ -247,17 +247,17 @@ class Server:
         self.response.del_cookie('JWT')
         self.uniauth.deleteSomething("account", info['username'])
         self.uniauth.deleteSomething("verif_code", info['username'])
-        return 'ok'
+        raise HTTPRedirect(self.response, "/auth")
 
     def createJwt(self, uid, verified):
         payload = {
             'username': uid,
             'verified': verified,
-            'exp': datetime.datetime.utcnow() + datetime.timedelta(days=1)
+            'exp': datetime.datetime.utcnow() + datetime.timedelta(minutes=15)
         }
         token = jwt.encode(payload, self.config.get('security', 'SECRET_KEY'), algorithm='HS256')
 
-        self.response.set_cookie('JWT', token, exp={"value": 100, "unit": "days"}, httponly=True, samesite='Strict',
+        self.response.set_cookie('JWT', token, exp={"value": 15, "unit": "minutes"}, httponly=True, samesite='Strict',
                                  secure=True)
 
         return token
@@ -300,12 +300,7 @@ class Server:
             print("OTP : ", OTP)
 
     def generateOTP(self,n=6):
-        digits = "0123456789"
-        OTP = ""
-
-        for i in range(n):
-            OTP += digits[math.floor(rand.random() * 10)]
-
+        OTP = secrets.randbelow(10 ** n)
         return OTP
 
     def register(self, username, password, parrain):
@@ -374,7 +369,7 @@ class Server:
             self.waiting_clients = {}
             self.currentWaiting = 0
             self.stop_event = asyncio.Event()
-            websocket_thread = threading.Thread(target=self.startWebSockets)
+            websocket_thread = threading.Thread(target=self.runWebsockets, daemon=True)
             websocket_thread.start()
             print("[INFO] Sakura - WS server started")
 
@@ -408,10 +403,6 @@ class Server:
         print("[INFO] SERVER STOPPED")
         exit()
 
-    def startWebSockets(self):
-        server = threading.Thread(target=self.runWebsockets, daemon=True)
-        server.start()
-
     async def handle_message(self,websocket):
         pass
 
@@ -429,7 +420,10 @@ class Server:
         except Exception as e:
             print("[ERROR] Sakura - exception in ws server", e)
 
-    def file(self,path):
+    def file(self, path, responseFile=True):
+        if responseFile:
+            self.response.type = "html"
+            self.response.headers = [('Content-Type', 'text/html')]
         file = self.fileCache.get(path)
         if file:
             return file
@@ -519,8 +513,9 @@ class Server:
 class Response:
     CODES = {200: "200 OK", 404: "404 Not Found", 500: "500 Server Error", 302: "302 Redirect"}
     ERROR_PAGES = {}
+    fileCache = {}
 
-    def __init__(self, start_response, code=200, type="html"):
+    def __init__(self, start_response, code=200, type="plain"):
         self.cookies = {}
         self.type = type
         self.headers = [('Content-Type', 'text/' + type),('Cache-Control', 'no-cache')]
@@ -529,13 +524,24 @@ class Response:
         self.content = ""
 
     def ok(self):
-        if self.code != 200 and self.code != 302:
-            if self.code not in self.ERROR_PAGES.keys():
-                self.type = "plain"
-                self.headers = [('Content-Type', 'text/plain')]
-            else:
-                self.content = open(self.ERROR_PAGES[self.code]).read()
+        if self.code in self.ERROR_PAGES.keys():
+            self.content = self.file(self.ERROR_PAGES[self.code])
+
         self.start_response(self.CODES.get(self.code, "500 UNEXPECTED"), self.headers)
+
+    def file(self,path):
+        #FIXME duplicate with server.file() should find a way to unify them
+        self.type = "html"
+        self.headers = [('Content-Type', 'text/html')]
+        file = self.fileCache.get(path)
+        if file:
+            return file
+        else:
+            file = open(path)
+            content = file.read()
+            file.close()
+            self.fileCache[path] = content
+            return content
 
     def encode(self):
         # print("[INFO] encoding response : ", self.content)
