@@ -511,7 +511,7 @@ class Server:
 
 
 class Response:
-    CODES = {200: "200 OK", 404: "404 Not Found", 500: "500 Server Error", 302: "302 Redirect"}
+    CODES = {200: "200 OK", 401: "401 Unauthorized", 404: "404 Not Found", 500: "500 Server Error", 302: "302 Redirect"}
     ERROR_PAGES = {}
     fileCache = {}
 
@@ -547,7 +547,7 @@ class Response:
         # print("[INFO] encoding response : ", self.content)
 
         if self.type == "plain":
-            return (self.CODES[self.code] + " " + self.content).encode()
+            return (self.CODES.get(self.code, "500 Unexpected error") + " " + self.content).encode()
         return str(self.content).encode()
 
     def set_cookie(self, name, value, exp=None, samesite=None, secure=False, httponly=False):
