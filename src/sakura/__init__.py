@@ -25,18 +25,11 @@ import threading
 import os
 import time
 
-import re
-import urllib
-
 import fastwsgi
 import bcrypt
 import jwt
 from configparser import ConfigParser
 import websockets
-
-#requests modules
-import multipart as mp
-from io import BytesIO
 
 # in house modules
 from sakura.db import db_service as db
@@ -46,12 +39,10 @@ from sakura.mailing import mailing_service as mailing
 import random as rand
 import math
 
-RE_URL = re.compile(r"[\&]")
-RE_PARAM = re.compile(r"[\=]")
-routes = {}
+from sakura.http import baseServer as server
+from sakura.http import response as Response
 
-
-class Server:
+class Server(server):
     features = {}
 
     def __init__(self, path, configFile, noStart=False):
@@ -80,103 +71,27 @@ class Server:
 
         self.start()
 
-    #----------------------------HTTP SERVER------------------------------------
-    def expose(func):
-        def wrapper(self, *args, **kwargs):
-
-            res = func(self, *args, **kwargs)
-            # print("[DEBUG] res : ", res)
-
-            self.response.ok()
-            if res:
-
-                return res.encode()
-            else:
-                return "".encode()
-
-        name = func.__name__
-        if func.__name__ == "index":
-            name = "/"
-        else:
-            name = "/" + func.__name__
-
-        routes[name] = {"params": inspect.signature(func).parameters, "target": wrapper}
-        return wrapper
-
-    def parseCookies(self, cookieStr):
-        if not cookieStr:
-            return
-        cookies = {}
-        for cookie in cookieStr.split(';'):
-            key, value = cookie.split('=')
-            cookies[key.strip()] = value
-        return cookies
-
-    def onrequest(self, environ, start_response):
-        self.response = Response(start_response=start_response)
-        print("[INFO] Sakura - request received :'", str(environ['PATH_INFO']) + "'")
-        target = environ['PATH_INFO']
-
-        if routes.get(target):
-            self.response.cookies = self.parseCookies(environ.get('HTTP_COOKIE'))
-
-            if environ.get('CONTENT_TYPE'):
-                content_type = environ.get('CONTENT_TYPE').strip().split(";")
-            else:
-                content_type = ["text/html"]
-
-            args = {}
-            if environ.get('QUERY_STRING'):
-                query = re.split(RE_URL, environ['QUERY_STRING'])
-                for i in range(0, len(query)):
-                    query[i] = re.split(RE_PARAM, query[i])
-                    args[query[i][0]] = urllib.parse.unquote(query[i][1])
-            if content_type[0] == "multipart/form-data":
-                length = int(environ.get('CONTENT_LENGTH'))
-                body = environ['wsgi.input'].read(length)
-                sep = content_type[1].split("=")[1]
-                body = mp.MultipartParser(BytesIO(body), sep.encode('utf-8'))
-                for part in body.parts():
-                    args[part.name] = part.value
-
-            try:
-                if len(args) == 0:
-                    return routes[target]["target"](self)
-                return routes[target]["target"](self, **args)
-            except (HTTPError, HTTPRedirect):
-                return self.response.encode()
-            except Exception as e:
-                print("[ERROR] Sakura - UNEXPECTED ERROR :", e)
-                self.response.code = 500
-                self.response.ok()
-                self.response.content = str(e)
-                return self.response.encode()
-        else:
-            self.response.code = 404
-            self.response.ok()
-            return self.response.encode()
-
     #-----------------------UNIAUTH RELATED METHODS-----------------------------
 
-    @expose
+    @server.expose
     def auth(self, parrain=None):
         return (open(self.path + "/static/home/auth.html").read() )
 
-    @expose
+    @server.expose
     def reset(self, email):
         return open(self.path + "/static/home/reset.html").read()
 
-    @expose
+    @server.expose
     def verif(self):
         self.checkJwt(verif=True)
         return open(self.path + "/static/home/verif.html").read()
 
-    @expose
+    @server.expose
     def resendVerif(self):
         user = self.getUser()
         self.sendVerification(user)
 
-    @expose
+    @server.expose
     def login(self, email, password, parrain=None):
         if 'email' and 'password':
             password = password.encode('utf-8')  # converting to bytes array
@@ -191,7 +106,7 @@ class Server:
 
         return msg
 
-    @expose
+    @server.expose
     def changePasswordVerif(self,mail, code, password):
         id = self.uniauth.getSomething("account", mail,"email")["id"]
         if not id :
@@ -205,7 +120,7 @@ class Server:
         else:
             return "Code erroné"
 
-    @expose
+    @server.expose
     def passwordReset(self, email):
         account = self.uniauth.getUserCredentials(email)
         # If account exists in accounts table
@@ -222,7 +137,7 @@ class Server:
             return "no account found for " + email
 
 
-    @expose
+    @server.expose
     def signup(self, code):
         user = self.getUser()
         actual = self.uniauth.getSomething("verif_code", user)
@@ -234,13 +149,13 @@ class Server:
         else:
             return "Code erroné"
 
-    @expose
+    @server.expose
     def logout(self):
         token = self.getJWT()
         self.response.del_cookie('JWT')
         return 'ok'
 
-    @expose
+    @server.expose
     def goodbye(self):  #delete account
         token = self.getJWT()
         info = jwt.decode(token, self.config.get('security', 'SECRET_KEY'), algorithms=['HS256'])
@@ -458,7 +373,7 @@ class Server:
 
     # --------------------------------WEBSOCKETS--------------------------------
 
-    @expose
+    @server.expose
     def authWS(self, connectionId):
         account_id = self.getUser()
         if self.waiting_clients[int(connectionId)]["uid"] != account_id:
@@ -515,97 +430,15 @@ class Server:
             else:
                 self.db.deleteSomething("active_client", client["id"])
 
-
-class Response:
-    CODES = {200: "200 OK", 404: "404 Not Found", 500: "500 Server Error", 302: "302 Redirect"}
-    ERROR_PAGES = {}
-
-    def __init__(self, start_response, code=200, type="html"):
-        self.cookies = {}
-        self.type = type
-        self.headers = [('Content-Type', 'text/' + type),('Cache-Control', 'no-cache')]
-        self.code = code
-        self.start_response = start_response
-        self.content = ""
-
-    def ok(self):
-        if self.code != 200 and self.code != 302:
-            if self.code not in self.ERROR_PAGES.keys():
-                self.type = "plain"
-                self.headers = [('Content-Type', 'text/plain')]
-            else:
-                self.content = open(self.ERROR_PAGES[self.code]).read()
-        self.start_response(self.CODES.get(self.code, "500 UNEXPECTED"), self.headers)
-
-    def encode(self):
-        # print("[INFO] encoding response : ", self.content)
-
-        if self.type == "plain":
-            return (self.CODES[self.code] + " " + self.content).encode()
-        return str(self.content).encode()
-
-    def set_cookie(self, name, value, exp=None, samesite=None, secure=False, httponly=False):
-        """Set a response cookie for the client.
-        name
-            the name of the cookie.
-
-        exp
-            the expiration timeout for the cookie. If 0 or other boolean
-            False, no 'expires' param will be set, and the cookie will be a
-            "session cookie" which expires when the browser is closed.
-
-        samesite
-            The 'SameSite' attribute of the cookie. If None (the default)
-            the cookie 'samesite' value will not be set. If 'Strict' or
-            'Lax', the cookie 'samesite' value will be set to the given value.
-
-        secure
-            if False (the default) the cookie 'secure' value will not
-            be set. If True, the cookie 'secure' value will be set (to 1).
-
-        httponly
-            If False (the default) the cookie 'httponly' value will not be set.
-            If True, the cookie 'httponly' value will be set (to 1).
-
-        """
-
-        # Calculate expiration time
-        expires = None
-        if exp:
-            if exp['unit'] == "days":
-                expires = datetime.datetime.now() + datetime.timedelta(days=exp['value'])
-            elif exp['unit'] == "minutes":
-                expires = datetime.datetime.now() + datetime.timedelta(minutes=exp['value'])
-            expires = expires.strftime("%a, %d-%b-%Y %H:%M:%S GMT")
-
-        # Construct cookie string
-        cookie_parts = [f"{name}={value}"]
-        if expires:
-            cookie_parts.append(f"Expires={expires}")
-        if samesite:
-            cookie_parts.append(f"SameSite={samesite}")
-        if secure:
-            cookie_parts.append("Secure")
-        if httponly:
-            cookie_parts.append("HttpOnly")
-        cookie_string = "; ".join(cookie_parts)
-
-        # Add cookie to headers
-        self.headers.append(('Set-Cookie', cookie_string))
-
-    def del_cookie(self, name):
-        self.set_cookie(name, "", exp={"value": 0, "unit": "days"})
-
-
 class HTTPError(Exception):
     def __init__(self, response, code=500, message="Unexpected"):
         response.code = code
         response.ok()
         response.content = message
 
-
 class HTTPRedirect(Exception):
     def __init__(self, response, target):
         response.code = 302
         response.headers.append(('Location', target))
         response.ok()
+
