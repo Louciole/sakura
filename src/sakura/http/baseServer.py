@@ -13,13 +13,19 @@ from io import BytesIO
 
 from configparser import ConfigParser
 
-from sakura.http import response as Response
-from sakura import HTTPError,HTTPRedirect
+from sakura.http import response
+from sakura.http import error
+from sakura.http import redirect
+Response = response.Response
+HTTPRedirect = redirect.HTTPRedirect
+HTTPError = error.HTTPError
 
 RE_URL = re.compile(r"[\&]")
 RE_PARAM = re.compile(r"[\=]")
 
 routes = {}
+
+
 class BaseServer:
     features = {}
 

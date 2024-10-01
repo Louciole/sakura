@@ -40,7 +40,10 @@ import random as rand
 import math
 
 from sakura.http import baseServer as server
+from sakura.http import error as HTTPError
+from sakura.http import redirect as HTTPRedirect
 from sakura.http import response as Response
+server = server.BaseServer
 
 class Server(server):
     features = {}
@@ -429,16 +432,3 @@ class Server(server):
                     self.db.deleteSomething("active_client", client["id"])
             else:
                 self.db.deleteSomething("active_client", client["id"])
-
-class HTTPError(Exception):
-    def __init__(self, response, code=500, message="Unexpected"):
-        response.code = code
-        response.ok()
-        response.content = message
-
-class HTTPRedirect(Exception):
-    def __init__(self, response, target):
-        response.code = 302
-        response.headers.append(('Location', target))
-        response.ok()
-
