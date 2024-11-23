@@ -44,6 +44,7 @@ from sakura.http import error as HTTPError
 from sakura.http import redirect as HTTPRedirect
 from sakura.http import response as Response
 server = server.BaseServer
+Response = Response.Response
 
 class Server(server):
     features = {}
