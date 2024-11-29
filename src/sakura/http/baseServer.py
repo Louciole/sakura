@@ -3,6 +3,9 @@ import inspect
 
 import os
 import time
+import json
+import hashlib
+import base64
 
 import re
 import urllib
@@ -63,6 +66,27 @@ class BaseServer:
         routes[name] = {"params": inspect.signature(func).parameters, "target": wrapper}
         return wrapper
 
+    def saveFile(self, content, name="",ext=None, category=None):
+        content = content.split(",")
+        extension = content[0].split("/")[1].split(";")[0]
+        content = base64.b64decode(content[1])
+
+        if not name :
+            hash_object = hashlib.sha256(content)
+            hex_dig = hash_object.hexdigest()
+
+            name = hex_dig
+
+        prefix = self.path + "/static/attachements/"
+        if category:
+            name = category + "/"  + name
+        if ext :
+            name = name + "." + ext
+
+        with open(prefix+name, 'wb') as f:
+            f.write(content)
+        return name
+
     def parseCookies(self, cookieStr):
         if not cookieStr:
             return
@@ -74,7 +98,7 @@ class BaseServer:
 
     def onrequest(self, environ, start_response):
         self.response = Response(start_response=start_response)
-        print("[INFO] Sakura - request received :'", str(environ['PATH_INFO']) + "'")
+        print("[INFO] Sakura - request received :'", str(environ['PATH_INFO']) + "'" + " with "+ str(environ.get('QUERY_STRING')))
         target = environ['PATH_INFO']
 
         if routes.get(target):
@@ -98,6 +122,12 @@ class BaseServer:
                 body = mp.MultipartParser(BytesIO(body), sep.encode('utf-8'))
                 for part in body.parts():
                     args[part.name] = part.value
+            if content_type[0] == "application/json":
+                length = int(environ.get('CONTENT_LENGTH'))
+                body = environ['wsgi.input'].read(length)
+                body = json.loads(body)
+                for key in body:
+                    args[key] = body[key]
 
             try:
                 if len(args) == 0:
