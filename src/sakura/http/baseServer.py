@@ -19,6 +19,7 @@ from configparser import ConfigParser
 from sakura.http import response
 from sakura.http import error
 from sakura.http import redirect
+from sakura.db import db_service as db
 Response = response.Response
 HTTPRedirect = redirect.HTTPRedirect
 HTTPError = error.HTTPError
@@ -60,6 +61,8 @@ class BaseServer:
         name = func.__name__
         if func.__name__ == "index":
             name = "/"
+        elif func.__name__ == "default":
+            name = "default"
         else:
             name = "/" + func.__name__
 
@@ -96,38 +99,61 @@ class BaseServer:
             cookies[key.strip()] = value
         return cookies
 
+
+    def parseRequest(self,environ):
+        if environ.get('CONTENT_TYPE'):
+            content_type = environ.get('CONTENT_TYPE').strip().split(";")
+        else:
+            content_type = ["text/html"]
+
+        args = {}
+        if environ.get('QUERY_STRING'):
+            query = re.split(RE_URL, environ['QUERY_STRING'])
+            for i in range(0, len(query)):
+                query[i] = re.split(RE_PARAM, query[i])
+                args[query[i][0]] = urllib.parse.unquote(query[i][1])
+        if content_type[0] == "multipart/form-data":
+            length = int(environ.get('CONTENT_LENGTH'))
+            body = environ['wsgi.input'].read(length)
+            sep = content_type[1].split("=")[1]
+            body = mp.MultipartParser(BytesIO(body), sep.encode('utf-8'))
+            for part in body.parts():
+                args[part.name] = part.value
+        if content_type[0] == "application/json":
+            length = int(environ.get('CONTENT_LENGTH'))
+            body = environ['wsgi.input'].read(length)
+            body = json.loads(body)
+            for key in body:
+                args[key] = body[key]
+
+        return args
+
+
+    def tryDefault(self, environ, target):
+        print("[INFO] Sakura - using default route")
+        self.response.cookies = self.parseCookies(environ.get('HTTP_COOKIE'))
+
+        args = self.parseRequest(environ)
+        args["target"] = target
+        try:
+            return routes["default"]["target"](self, **args)
+        except (HTTPError, HTTPRedirect):
+            return self.response.encode()
+        except Exception as e:
+            print("[ERROR] Sakura - UNEXPECTED ERROR :", e)
+            self.response.code = 500
+            self.response.ok()
+            self.response.content = str(e)
+            return self.response.encode()
+
+
     def onrequest(self, environ, start_response):
         self.response = Response(start_response=start_response)
         print("[INFO] Sakura - request received :'", str(environ['PATH_INFO']) + "'" + " with "+ str(environ.get('QUERY_STRING')))
         target = environ['PATH_INFO']
 
         if routes.get(target):
-            self.response.cookies = self.parseCookies(environ.get('HTTP_COOKIE'))
-
-            if environ.get('CONTENT_TYPE'):
-                content_type = environ.get('CONTENT_TYPE').strip().split(";")
-            else:
-                content_type = ["text/html"]
-
-            args = {}
-            if environ.get('QUERY_STRING'):
-                query = re.split(RE_URL, environ['QUERY_STRING'])
-                for i in range(0, len(query)):
-                    query[i] = re.split(RE_PARAM, query[i])
-                    args[query[i][0]] = urllib.parse.unquote(query[i][1])
-            if content_type[0] == "multipart/form-data":
-                length = int(environ.get('CONTENT_LENGTH'))
-                body = environ['wsgi.input'].read(length)
-                sep = content_type[1].split("=")[1]
-                body = mp.MultipartParser(BytesIO(body), sep.encode('utf-8'))
-                for part in body.parts():
-                    args[part.name] = part.value
-            if content_type[0] == "application/json":
-                length = int(environ.get('CONTENT_LENGTH'))
-                body = environ['wsgi.input'].read(length)
-                body = json.loads(body)
-                for key in body:
-                    args[key] = body[key]
+            args = self.parseRequest(environ)
 
             try:
                 if len(args) == 0:
@@ -142,6 +168,8 @@ class BaseServer:
                 self.response.content = str(e)
                 return self.response.encode()
         else:
+            if routes.get("default"):
+                return self.tryDefault(environ, target)
             self.response.code = 404
             self.response.ok()
             return self.response.encode()
@@ -165,6 +193,12 @@ class BaseServer:
         if self.features.get("errors"):
             for code, page in self.features["errors"].items():
                 Response.ERROR_PAGES[code] = self.path + page
+
+        if self.features.get("orm") == True:
+            self.db = db.DB(user=self.config.get('DB', 'DB_USER'), password=self.config.get('DB', 'DB_PASSWORD'),
+                            host=self.config.get('DB', 'DB_HOST'), port=int(self.config.get('DB', 'DB_PORT')),
+                            db=self.config.get('DB', 'DB_NAME'))
+
 
         self.onStart()
 

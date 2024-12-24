@@ -7,7 +7,7 @@ packages = ["src/sakura"]
 
 [project]
 name = "sakura"
-version = "1.0.8"
+version = "1.0.9"
 authors = [
     {name="Lou ! ", email="lou@carbonlab.dev" },
 ]
