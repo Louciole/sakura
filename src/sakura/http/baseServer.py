@@ -101,6 +101,8 @@ class BaseServer:
 
 
     def parseRequest(self,environ):
+        self.response.cookies = self.parseCookies(environ.get('HTTP_COOKIE'))
+
         if environ.get('CONTENT_TYPE'):
             content_type = environ.get('CONTENT_TYPE').strip().split(";")
         else:
@@ -131,7 +133,6 @@ class BaseServer:
 
     def tryDefault(self, environ, target):
         print("[INFO] Sakura - using default route")
-        self.response.cookies = self.parseCookies(environ.get('HTTP_COOKIE'))
 
         args = self.parseRequest(environ)
         args["target"] = target
