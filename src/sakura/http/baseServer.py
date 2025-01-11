@@ -83,7 +83,7 @@ class BaseServer:
 
             name = hex_dig
 
-        prefix = self.path + "/static/attachements/"
+        prefix = self.path + "/static/attachments/"
         if category:
             name = category + "/"  + name
         if ext :
