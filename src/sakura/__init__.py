@@ -337,18 +337,27 @@ class Server(server):
         pass
 
     def runWebsockets(self):
-        try :
+        """
+        Asynchronously runs the WebSocket server.
+        """
+        try:
             loop = asyncio.new_event_loop()
             asyncio.set_event_loop(loop)
-            ws_server = websockets.serve(self.handle_message, self.config.get("server", "IP"),
-                                         int(self.config.get("NOTIFICATION", "PORT")))
 
-            loop.run_until_complete(ws_server)
-            loop.run_forever() # this is missing
+            async def _run_server():
+                async with websockets.serve(
+                        self.handle_message,
+                        self.config.get("server", "IP"),
+                        int(self.config.get("NOTIFICATION", "PORT"))
+                ):
+                    await asyncio.Future()
+
+            loop.run_until_complete(_run_server())
+            loop.run_forever()
             loop.close()
 
         except Exception as e:
-            print("[ERROR] Sakura - exception in ws server", e)
+            print("[ERROR] Sakura - exception in ws server:", e)
 
     def file(self,path):
         file = self.fileCache.get(path)
