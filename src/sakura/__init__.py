@@ -47,30 +47,33 @@ server = server.BaseServer
 Response = Response.Response
 HTTPRedirect = HTTPRedirect.HTTPRedirect
 HTTPError = HTTPError.HTTPError
+from colorama import Fore, Style
+from colorama import init as colorama_init
+colorama_init()
 
 class Server(server):
     features = {}
 
     def __init__(self, path, configFile, noStart=False):
-        print("[INFO] starting Sakura server...")
+        print(Fore.GREEN,"[INFO] starting Sakura server...")
         self.path = path
 
         self.importConf(configFile)
         self.db = db.DB(user=self.config.get('DB', 'DB_USER'), password=self.config.get('DB', 'DB_PASSWORD'),
                         host=self.config.get('DB', 'DB_HOST'), port=int(self.config.get('DB', 'DB_PORT')),
                         db=self.config.get('DB', 'DB_NAME'))
-        print("[INFO] successfully connected to postgresql!")
+        print(Fore.GREEN,"[INFO] successfully connected to postgresql!")
         self.uniauth = db.DB(user=self.config.get('DB', 'DB_USER'), password=self.config.get('DB', 'DB_PASSWORD'),
                              host=self.config.get('UNIAUTH', 'DB_HOST'),
                              port=int(self.config.get('UNIAUTH', 'DB_PORT')), db=self.config.get('UNIAUTH', 'DB_NAME'))
-        print("[INFO] successfully connected to uniauth!")
+        print(Fore.GREEN,"[INFO] successfully connected to uniauth!")
 
         if not self.config.getboolean("server", "DEBUG"):
             self.noreply = mailing.Mailing(self.config.get('MAILING', 'MAILING_HOST'),
                                            self.config.get('MAILING', 'MAILING_PORT'),
                                            "noreply@carbonlab.dev", self.config.get('MAILING', 'NOREPLY_PASSWORD'),
                                            self.config.get("server", "SERVICE_NAME"), self.path)
-            print("[INFO] successfully connected to the mailing service!")
+            print(Fore.GREEN,"[INFO] successfully connected to the mailing service!")
 
         if noStart:
             return
@@ -282,9 +285,9 @@ class Server(server):
         self.config = ConfigParser()
         try:
             self.config.read(self.path + configFile)
-            print("[INFO] Sakura - config at " + self.path + configFile + " loaded")
+            print(Fore.GREEN,"[INFO] Sakura - config at " + self.path + configFile + " loaded")
         except Exception:
-            print("[ERROR] Sakura - Please create a config file")
+            print(Fore.RED,"[ERROR] Sakura - Please create a config file")
 
     def start(self):
         self.fileCache = {}
@@ -297,7 +300,7 @@ class Server(server):
             self.stop_event = asyncio.Event()
             websocket_thread = threading.Thread(target=self.startWebSockets)
             websocket_thread.start()
-            print("[INFO] Sakura - WS server started")
+            print(Fore.GREEN,"[INFO] Sakura - WS server started")
 
         if self.features.get("errors"):
             for code, page in self.features["errors"].items():
@@ -308,7 +311,7 @@ class Server(server):
         fastwsgi.server.nowait = 1
         fastwsgi.server.hook_sigint = 1
 
-        print("[INFO] Sakura - server running on PID:", os.getpid())
+        print(Fore.GREEN,"[INFO] Sakura - server running on PID:", os.getpid())
         fastwsgi.server.init(app=self.onrequest, host=self.config.get('server', 'IP'),
                              port=int(self.config.get('server', 'PORT')))
         while True:
@@ -319,14 +322,14 @@ class Server(server):
         self.close()
 
     def close(self):
-        print("[INFO] SIGTERM/SIGINT received")
+        print(Fore.GREEN,"[INFO] SIGTERM/SIGINT received")
 
         fastwsgi.server.close()
         if self.features.get("websockets"):
             self.closeWebSockets()
 
         self.clean()
-        print("[INFO] SERVER STOPPED")
+        print(Fore.GREEN,"[INFO] SERVER STOPPED")
         exit()
 
     def startWebSockets(self):
@@ -357,7 +360,7 @@ class Server(server):
             loop.close()
 
         except Exception as e:
-            print("[ERROR] Sakura - exception in ws server:", e)
+            print(Fore.RED,"[ERROR] Sakura - exception in ws server:", e)
 
     def file(self,path):
         file = self.fileCache.get(path)
@@ -375,7 +378,7 @@ class Server(server):
             # Close the websocket connection
             asyncio.run_coroutine_threadsafe(ws.close(), asyncio.get_event_loop())
         self.stop_event.set()
-        print("[INFO] WS server closed")
+        print(Fore.GREEN,"[INFO] WS server closed")
 
     def clean(self):
         pass
@@ -384,7 +387,7 @@ class Server(server):
         fastwsgi.server.close()
         for client, ws in self.pool.items():
             self.db.deleteSomething("active_client", client)
-        print("[INFO] cleaned database")
+        print(Fore.GREEN,"[INFO] cleaned database")
 
     # --------------------------------WEBSOCKETS--------------------------------
 
@@ -414,7 +417,7 @@ class Server(server):
                 try:
                     await websocket.send(json.dumps(message))
                 except Exception as e:
-                    print("[ERROR] Sakura - exception sending a message on a ws", e)
+                    print(Fore.RED,"[ERROR] Sakura - exception sending a message '", message,"' on a ws", e)
                     del self.pool[client["id"]]
                     self.db.deleteSomething("active_client", client["id"])
             else:
@@ -439,7 +442,7 @@ class Server(server):
                 try:
                     asyncio.run(ws_send(json.dumps(message)))
                 except Exception as e:
-                    print("[ERROR] Sakura - exception sending a message on a ws", e)
+                    print(Fore.RED,"[ERROR] Sakura - exception sending a message '", message,"' on a ws", e)
                     del self.pool[client["id"]]
                     self.db.deleteSomething("active_client", client["id"])
             else:

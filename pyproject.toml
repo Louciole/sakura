@@ -21,7 +21,8 @@ dependencies = [
     "PyJWT",
     "dkimpy",
     "websockets",
-    "multipart"
+    "multipart",
+    "colorama"
 ]
 license = {file = "LICENSE.md"}
 classifiers = [

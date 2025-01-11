@@ -29,12 +29,15 @@ RE_PARAM = re.compile(r"[\=]")
 
 routes = {}
 
+from colorama import Fore, Style
+from colorama import init as colorama_init
+colorama_init()
 
 class BaseServer:
     features = {}
 
     def __init__(self, path, configFile, noStart=False):
-        print("[INFO] starting Sakura server...")
+        print(Fore.GREEN,"[INFO] starting Sakura server...")
         self.path = path
 
         self.importConf(configFile)
@@ -132,7 +135,7 @@ class BaseServer:
 
 
     def tryDefault(self, environ, target):
-        print("[INFO] Sakura - using default route")
+        print(Fore.WHITE,"[INFO] Sakura - using default route")
 
         args = self.parseRequest(environ)
         args["target"] = target
@@ -141,7 +144,7 @@ class BaseServer:
         except (HTTPError, HTTPRedirect):
             return self.response.encode()
         except Exception as e:
-            print("[ERROR] Sakura - UNEXPECTED ERROR :", e)
+            print(Fore.RED,"[ERROR] Sakura - UNEXPECTED ERROR :", e)
             self.response.code = 500
             self.response.ok()
             self.response.content = str(e)
@@ -150,7 +153,7 @@ class BaseServer:
 
     def onrequest(self, environ, start_response):
         self.response = Response(start_response=start_response)
-        print("[INFO] Sakura - request received :'", str(environ['PATH_INFO']) + "'" + " with "+ str(environ.get('QUERY_STRING')))
+        print(Fore.WHITE,"[INFO] Sakura - request received :'", str(environ['PATH_INFO']) + "'" + " with "+ str(environ.get('QUERY_STRING')))
         target = environ['PATH_INFO']
 
         if routes.get(target):
@@ -163,7 +166,7 @@ class BaseServer:
             except (HTTPError, HTTPRedirect):
                 return self.response.encode()
             except Exception as e:
-                print("[ERROR] Sakura - UNEXPECTED ERROR :", e)
+                print(Fore.RED,"[ERROR] Sakura - UNEXPECTED ERROR :", e)
                 self.response.code = 500
                 self.response.ok()
                 self.response.content = str(e)
@@ -184,9 +187,9 @@ class BaseServer:
         self.config = ConfigParser()
         try:
             self.config.read(self.path + configFile)
-            print("[INFO] Sakura - config at " + self.path + configFile + " loaded")
+            print(Fore.GREEN,"[INFO] Sakura - config at " + self.path + configFile + " loaded")
         except Exception:
-            print("[ERROR] Sakura - Please create a config file")
+            print(Fore.RED,"[ERROR] Sakura - Please create a config file")
 
     def start(self):
         self.fileCache = {}
@@ -206,7 +209,7 @@ class BaseServer:
         fastwsgi.server.nowait = 1
         fastwsgi.server.hook_sigint = 1
 
-        print("[INFO] Sakura - server running on PID:", os.getpid())
+        print(Fore.GREEN,"[INFO] Sakura - server running on PID:", os.getpid())
         fastwsgi.server.init(app=self.onrequest, host=self.config.get('server', 'IP'),
                              port=int(self.config.get('server', 'PORT')))
         while True:
@@ -217,9 +220,9 @@ class BaseServer:
         self.close()
 
     def close(self):
-        print("[INFO] SIGTERM/SIGINT received")
+        print(Fore.GREEN,"[INFO] SIGTERM/SIGINT received")
         fastwsgi.server.close()
-        print("[INFO] SERVER STOPPED")
+        print(Fore.GREEN,"[INFO] SERVER STOPPED")
         exit()
 
     def file(self, path, responseFile=True):
