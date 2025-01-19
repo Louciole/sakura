@@ -1,7 +1,7 @@
 import datetime
 
 class Response:
-    CODES = {200: "200 OK", 404: "404 Not Found", 500: "500 Server Error", 302: "302 Redirect"}
+    CODES = {200: "200 OK", 400: "400 Bad Request", 404: "404 Not Found", 500: "500 Server Error", 302: "302 Redirect"}
     ERROR_PAGES = {}
 
     def __init__(self, start_response, code=200, type="html"):

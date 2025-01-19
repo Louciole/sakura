@@ -162,7 +162,7 @@ class Server(server):
     def logout(self):
         token = self.getJWT()
         self.response.del_cookie('JWT')
-        return 'ok'
+        raise HTTPRedirect(self.response, "/auth")
 
     @server.expose
     def goodbye(self):  #delete account
