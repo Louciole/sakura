@@ -14,11 +14,15 @@ class Response:
 
     def ok(self):
         if self.code != 200 and self.code != 302:
-            if self.code not in self.ERROR_PAGES.keys():
+            if self.code in self.ERROR_PAGES.keys():
+                self.type = "html"
+                self.headers = [('Content-Type', 'text/html')]
+                file = open(self.ERROR_PAGES[self.code])
+                self.content = file.read()
+                file.close()
+            else:
                 self.type = "plain"
                 self.headers = [('Content-Type', 'text/plain')]
-            else:
-                self.content = open(self.ERROR_PAGES[self.code]).read()
         self.start_response(self.CODES.get(self.code, "500 UNEXPECTED"), self.headers)
 
     def encode(self):
