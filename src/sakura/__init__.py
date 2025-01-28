@@ -83,7 +83,7 @@ class Server(server):
     #-----------------------UNIAUTH RELATED METHODS-----------------------------
 
     @server.expose
-    def auth(self, parrain=None):
+    def auth(self, parrain=None, ref=None):
         return (open(self.path + "/static/home/auth.html").read() )
 
     @server.expose
@@ -91,7 +91,7 @@ class Server(server):
         return open(self.path + "/static/home/reset.html").read()
 
     @server.expose
-    def verif(self):
+    def verif(self, ref=None):
         self.checkJwt(verif=True)
         return open(self.path + "/static/home/verif.html").read()
 
@@ -162,6 +162,7 @@ class Server(server):
     def logout(self):
         token = self.getJWT()
         self.response.del_cookie('JWT')
+        self.response.del_cookie('auth')
         raise HTTPRedirect(self.response, "/auth")
 
     @server.expose
@@ -169,6 +170,7 @@ class Server(server):
         token = self.getJWT()
         info = jwt.decode(token, self.config.get('security', 'SECRET_KEY'), algorithms=['HS256'])
         self.response.del_cookie('JWT')
+        self.response.del_cookie('auth')
         self.uniauth.deleteSomething("account", info['username'])
         self.uniauth.deleteSomething("verif_code", info['username'])
         return 'ok'
@@ -183,6 +185,7 @@ class Server(server):
 
         self.response.set_cookie('JWT', token, exp={"value": 100, "unit": "days"}, httponly=True, samesite='Strict',
                                  secure=True)
+        self.response.set_cookie('auth', "true", exp={"value": 100, "unit": "days"}, samesite='Strict')
 
         return token
 
