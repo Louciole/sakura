@@ -238,3 +238,11 @@ class BaseServer:
             file.close()
             self.fileCache[path] = content
             return content
+
+    def start_ORM(self):
+        if self.features.get("orm") == True:
+            self.db = db.DB(user=self.config.get('DB', 'DB_USER'), password=self.config.get('DB', 'DB_PASSWORD'),
+                            host=self.config.get('DB', 'DB_HOST'), port=int(self.config.get('DB', 'DB_PORT')),
+                            db=self.config.get('DB', 'DB_NAME'))
+        else:
+            raise Exception("ORM not enabled")
