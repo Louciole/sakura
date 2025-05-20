@@ -212,7 +212,10 @@ class Server(server):
 
     def getUser(self):
         token = self.getJWT()
-        info = jwt.decode(token, self.config.get('security', 'SECRET_KEY'), algorithms=['HS256'])
+        try:
+            info = jwt.decode(token, self.config.get('security', 'SECRET_KEY'), algorithms=['HS256'])
+        except jwt.ExpiredSignatureError:
+            self.logout()
         return info['username']
 
     def sendVerification(self, uid, mail=''):

@@ -144,11 +144,7 @@ class BaseServer:
         except (HTTPError, HTTPRedirect):
             return self.response.encode()
         except Exception as e:
-            print(Fore.RED,"[ERROR] Sakura - UNEXPECTED ERROR :", e)
-            self.response.code = 500
-            self.response.ok()
-            self.response.content = str(e)
-            return self.response.encode()
+            return self.handleUnexpected(e)
 
 
     def onrequest(self, environ, start_response):
@@ -166,17 +162,30 @@ class BaseServer:
             except (HTTPError, HTTPRedirect):
                 return self.response.encode()
             except Exception as e:
-                print(Fore.RED,"[ERROR] Sakura - UNEXPECTED ERROR :", e)
-                self.response.code = 500
-                self.response.ok()
-                self.response.content = str(e)
-                return self.response.encode()
+               return self.handleUnexpected(e)
         else:
             if routes.get("default"):
                 return self.tryDefault(environ, target)
             self.response.code = 404
             self.response.ok()
             return self.response.encode()
+
+    def handleUnexpected(self, e):
+        print(Fore.RED,"[ERROR] Sakura - UNEXPECTED ERROR :", e)
+        self.response.code = 500
+        self.response.ok()
+        self.response.content = str(e)
+        tb = e.__traceback__
+        while tb is not None:
+            frame = tb.tb_frame
+            lineno = tb.tb_lineno
+            filename = frame.f_code.co_filename
+            funcname = frame.f_code.co_name
+            print(f'  File "{filename}", line {lineno}, in {funcname}')
+            if self.features.get("debug"):
+                self.response.content += f'  File "{filename}", line {lineno}, in {funcname}'
+            tb = tb.tb_next
+        return self.response.encode()
 
     def onStart(self):
         pass
