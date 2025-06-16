@@ -204,7 +204,7 @@ class Server(server):
         except jwt.ExpiredSignatureError:
             raise HTTPRedirect(self.response,"/auth")
         except jwt.DecodeError:
-            raise HTTPError(self.response, 400, 'ERROR : INVALID TOKEN')
+            raise HTTPRedirect(self.response,"/auth")
 
     def getJWT(self):
         token = self.response.cookies['JWT']
