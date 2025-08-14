@@ -47,3 +47,12 @@ create table pendingMembership (
 );
 ALTER TABLE pendingMembership
     ADD CONSTRAINT PEND_MEM_COMPANY_CONSTRAINT FOREIGN KEY (company) REFERENCES companies (id) ON UPDATE CASCADE;
+
+
+create table if not exists unibridge(
+    id bigserial NOT NULL PRIMARY KEY,
+    source varchar(64) NOT NULL,
+    name varchar(256) NOT NULL,
+    related_table varchar(256),
+    value jsonb DEFAULT ''
+)

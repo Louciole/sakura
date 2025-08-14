@@ -212,3 +212,19 @@ class DB:
     def initUniauth(self):
         self.cur.execute(open(dirname(abspath(__file__)) + "/UNIAUTH.sql", "r").read())
         self.conn.commit()
+
+    def postUniBridgeData(self, source, name, value=None, related=None):
+        data = {"source": source, "name": name}
+        if value:
+            data["value"] = value
+        if related:
+            data["related_table"] = related
+
+        self.insertDict("unibridge", data)
+
+    #notif name should NEVER be arbitrary
+    def postUniBridgeNotification(self, notif_name, element):
+        if self.getSomething("unibridge", notif_name, "related_table"):
+            self.insertDict(notif_name, element)
+        else:
+            raise Exception(f"Notification {notif_name} does not exist in unibridge table")
