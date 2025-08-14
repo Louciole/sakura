@@ -54,5 +54,5 @@ create table if not exists unibridge(
     source varchar(64) NOT NULL,
     name varchar(256) NOT NULL,
     related_table varchar(256),
-    value jsonb DEFAULT ''
+    value jsonb DEFAULT '{}'
 )
