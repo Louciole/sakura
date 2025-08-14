@@ -228,3 +228,26 @@ class DB:
             self.insertDict(notif_name, element)
         else:
             raise Exception(f"Notification {notif_name} does not exist in unibridge table")
+
+    def createTable(self, name, schema):
+        """
+        Create a new table in the database with the given name and schema.
+        :param name: Name of the table to create.
+        :param schema: SQL schema definition for the table.
+        """
+        try:
+            self.cur.execute(sql.SQL("CREATE TABLE IF NOT EXISTS {} ({})").format(sql.Identifier(name), sql.SQL(schema)))
+            self.conn.commit()
+        except psycopg.Error as e:
+            print(f"Error creating table {name}: {e}")
+            self.conn.rollback()
+
+    def getUnibridgeNotifs(self, notif_name, selector='id', selector_value=None):
+        if self.getSomething("unibridge", notif_name, "related_table"):
+            if selector_value:
+                return self.getAll("unibridge", selector_value, selector)
+
+            self.cur.execute(sql.SQL("SELECT * FROM {}").format(sql.Identifier(notif_name)))
+            return self.cur.fetchall()
+        else:
+            raise Exception(f"Notification {notif_name} does not exist in unibridge table")
