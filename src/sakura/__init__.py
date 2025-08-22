@@ -400,8 +400,8 @@ class Server(server):
     @server.expose
     def authWS(self, connectionId):
         account_id = self.getUser()
-        if self.waiting_clients[int(connectionId)]["uid"] != account_id:
-            return "forbidden"
+        if int(self.waiting_clients[int(connectionId)]["uid"]) != account_id:
+            raise HTTPError(self.response, 403)
 
         connection = self.db.insertDict("active_client", {"userid": account_id, "server": self.id}, True)
         self.pool[connection] = self.waiting_clients[int(connectionId)]["connection"]
@@ -412,7 +412,7 @@ class Server(server):
     def onWSAuth(self,uid):
         pass
 
-    async def sendNotificationAsync(self, account, content):
+    async def sendNotificationAsync(self, account, content, exclude=None):
         message = {"type": "notif", "content": content}
 
         clients = self.db.getAll("active_client", account, "userid")
@@ -420,6 +420,10 @@ class Server(server):
             #TODO handle multi server
             if self.pool.get(client["id"]):
                 websocket = self.pool[client["id"]]
+
+                if exclude and websocket ==exclude:
+                    continue
+
                 try:
                     await websocket.send(json.dumps(message))
                 except Exception as e:
