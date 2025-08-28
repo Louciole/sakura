@@ -203,7 +203,7 @@ class Server(server):
                 raise HTTPRedirect(self.response, self.config.get("server", "DEFAULT_ENDPOINT"))
         except (jwt.ExpiredSignatureError, jwt.DecodeError):
             self.logout()
-        return token
+        return info
 
     def getJWT(self):
         token = self.response.cookies['JWT']
