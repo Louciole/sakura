@@ -201,21 +201,16 @@ class Server(server):
                 raise HTTPRedirect(self.response, "/verif")
             elif verif and info['verified']:
                 raise HTTPRedirect(self.response, self.config.get("server", "DEFAULT_ENDPOINT"))
-        except jwt.ExpiredSignatureError:
-            raise HTTPRedirect(self.response,"/auth")
-        except jwt.DecodeError:
-            raise HTTPRedirect(self.response,"/auth")
+        except (jwt.ExpiredSignatureError, jwt.DecodeError):
+            self.logout()
+        return token
 
     def getJWT(self):
         token = self.response.cookies['JWT']
         return token
 
     def getUser(self):
-        token = self.getJWT()
-        try:
-            info = jwt.decode(token, self.config.get('security', 'SECRET_KEY'), algorithms=['HS256'])
-        except jwt.ExpiredSignatureError:
-            self.logout()
+        info = self.checkJwt()
         return info['username']
 
     def sendVerification(self, uid, mail=''):
