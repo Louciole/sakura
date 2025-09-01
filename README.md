@@ -12,8 +12,11 @@ Read the docs from https://louciole.gitlab.io/sakura-docs/
 
 ## 👼 Create new project
 
-`git clone git@gitlab.com:Louciole/emptysakura.git
-`
+0. `mkdir myproject && cd myproject`
+1. create a virtualenv
+2. `pip install git+https://gitlab.com/Louciole/sakura.git/`
+
+3. `sakura init` and follow the CLI instructions
 
 ## 📁 Build from sources
 
@@ -22,6 +25,3 @@ Read the docs from https://louciole.gitlab.io/sakura-docs/
 `python3 -m build`
 
 `pip install PATH-TO-HERE/dist/sakura-0.1.2-py3-none-any.whl`
-
-## 🕰️ LEGACY
-If you care about the cherrypy version please look to the v0 branch

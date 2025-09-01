@@ -396,6 +396,22 @@ class Server(server):
         print(Fore.GREEN,"[INFO] cleaned database")
 
     # --------------------------------WEBSOCKETS--------------------------------
+    @server.expose
+    def config(self):
+        if not self.features.get("websockets"):
+            raise HTTPError(self.response, 404)
+
+        if self.config.get("server", "DEBUG"):
+            url = self.config.get("NOTIFICATION", "DEBUG_URL")
+        else:
+            url = self.config.get("NOTIFICATION", "URL")
+
+        doc= f"""const WEBSOCKETS = "{url}";\n """ + "export {WEBSOCKETS}"
+
+        self.response.type = "application/javascript"
+        self.response.headers = [('Content-Type', 'application/javascript')]
+        return doc
+
 
     @server.expose
     def authWS(self, connectionId):
