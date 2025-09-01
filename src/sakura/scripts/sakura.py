@@ -2,7 +2,8 @@ import argparse
 import os
 import subprocess
 
-EMPTY_PROJECT_PATH = os.path.join(os.path.dirname(__file__), '..', 'emptyProject')
+HERE = os.path.dirname(__file__)
+EMPTY_PROJECT_PATH = os.path.join(HERE, '..', 'emptyProject')
 
 def ex( command):
     subprocess.run(command, shell=True, check=True)
@@ -126,7 +127,6 @@ def init_project():
 
 
 def main():
-    print("Sakura CLI")
     parser = argparse.ArgumentParser(prog='sakura', description='Sakura project management CLI')
     subparsers = parser.add_subparsers(dest='command')
 
@@ -146,7 +146,7 @@ def main():
     elif args.command == 'update':
         pass
     elif args.command == 'test':
-        pass
+        ex(f"python {HERE}/testsRun.py")
     elif args.command == 'add-feature':
         pass
     else:

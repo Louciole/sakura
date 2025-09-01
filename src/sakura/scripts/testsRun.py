@@ -1,16 +1,18 @@
 import os
+import sys
 import importlib
 from colorama import Fore, Style, init
 
 def run_file(file_path):
     """Runs a single Python test file."""
     # Extract the module name from the file path
-    module_name = os.path.splitext(os.path.relpath(file_path, "tests"))[0].replace("/", ".")
     readable_path = file_path.strip(test_dir)
 
     # Import the test module
     try:
-        test_module = importlib.import_module(f"{module_name}", package=None)
+        module_path = os.path.splitext(file_path[2:])[0]
+        module_name = module_path.replace(os.sep, '.')
+        test_module = importlib.import_module(module_name)
     except ModuleNotFoundError as e:
         print(f"Failed to import test module '{module_name}': {e}")
         return False
@@ -57,6 +59,10 @@ if __name__ == "__main__":
 
     counter = 0
     total = 0
+
+    cwd = os.getcwd()
+    if cwd not in sys.path:
+        sys.path.insert(0, cwd)
 
     for _, dirs, _ in os.walk(test_dir):
         for folder in dirs:
