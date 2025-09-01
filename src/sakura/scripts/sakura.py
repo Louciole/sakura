@@ -25,37 +25,55 @@ def list_features(server):
 
 
 def copy_features(server, features):
-    ex(f"cp {EMPTY_PROJECT_PATH}/misc/sakura.service ./misc/")
-    ex(f"cp {EMPTY_PROJECT_PATH}/misc/nginx_local ./misc/")
-    ex(f"cp {EMPTY_PROJECT_PATH}/static/main.html ./static/")
-    ex(f"cp {EMPTY_PROJECT_PATH}/static/main.mjs ./static/")
-    ex(f"cp {EMPTY_PROJECT_PATH}/static/style.css ./static/")
+    ex(f"cp -r {EMPTY_PROJECT_PATH}/misc ./")
+    ex(f"cp -r {EMPTY_PROJECT_PATH}/static ./")
+    ex(f"cp -r {EMPTY_PROJECT_PATH}/tests ./")
     ex(f"cp {EMPTY_PROJECT_PATH}/.gitignore .")
     ex(f"cp {EMPTY_PROJECT_PATH}/CONTRIBUTING.md .")
     ex(f"cp {EMPTY_PROJECT_PATH}/LICENSE.md .")
     ex(f"cp {EMPTY_PROJECT_PATH}/README.md .")
     ex(f"cp {EMPTY_PROJECT_PATH}/install.sh .")
     ex(f"cp {EMPTY_PROJECT_PATH}/requirements.txt .")
+    ex(f"cp {EMPTY_PROJECT_PATH}/.gitlab-ci.yml .")
+
 
     if server == "http":
-        ex(f"cp -r {EMPTY_PROJECT_PATH}/db/server_static.py ./server.py")
+        if "ORM" in features:
+            ex(f"cp {EMPTY_PROJECT_PATH}/server_static_orm.py ./server.py")
+            ex(f"cp {EMPTY_PROJECT_PATH}/server_static_orm.ini ./server.ini")
+        else:
+            ex(f"cp {EMPTY_PROJECT_PATH}/server_static.py ./server.py")
+            ex(f"cp {EMPTY_PROJECT_PATH}/server_static.ini ./server.ini")
+        ex(f"rm -r {EMPTY_PROJECT_PATH}/static/home")
     else:
-        ex(f"cp -r {EMPTY_PROJECT_PATH}/db/server_sakura.py ./server.py")
-        ex(f"cp -r {EMPTY_PROJECT_PATH}/db/initDB.py ./db/")
-        ex(f"cp -r {EMPTY_PROJECT_PATH}/db/models.py ./db/")
-        ex(f"cp -r {EMPTY_PROJECT_PATH}/db/migrations ./db/")
-        ex(f"cp -r {EMPTY_PROJECT_PATH}/auth ./")
-        ex(f"cp -r {EMPTY_PROJECT_PATH}/templates ./")
-        ex(f"cp -r {EMPTY_PROJECT_PATH}/emails ./")
+        if "ws" in features:
+            ex(f"cp {EMPTY_PROJECT_PATH}/server_sakura_ws.ini ./server.ini")
+            ex(f"cp {EMPTY_PROJECT_PATH}/server_sakura_ws.py ./server.py")
+        else:
+            ex(f"cp {EMPTY_PROJECT_PATH}/server_sakura.ini ./server.ini")
+            ex(f"cp {EMPTY_PROJECT_PATH}/server_sakura.py ./server.py")
 
-        # print(f"Feature '{feat}' added to the project.")
+        ex(f"cp -r {EMPTY_PROJECT_PATH}/mailing ./")
 
+        if "cron" in features:
+            ex(f"cp -r {EMPTY_PROJECT_PATH}/crons ./")
 
-src = os.path.join(EMPTY_PROJECT_PATH, feature)
-    if not os.path.exists(src):
-        print(f"Unknown feature: {feature}")
-        return
+    if "orm" in features or server == "sakura":
+        ex(f"cp -r {EMPTY_PROJECT_PATH}/db ./")
 
+    if "js" not in features:
+        ex(f"rm -r {EMPTY_PROJECT_PATH}/static/framework")
+        ex(f"rm -r {EMPTY_PROJECT_PATH}/static/translations")
+        ex(f"rm {EMPTY_PROJECT_PATH}/static/mobileUiManifest.mjs")
+
+    if "md" not in features:
+        ex(f"rm -r {EMPTY_PROJECT_PATH}/static/markdown")
+
+    if "ws" not in features:
+        ex(f"rm -r {EMPTY_PROJECT_PATH}/static/ws")
+    else:
+        ex(f"cp {EMPTY_PROJECT_PATH}/misc/nginx_prod_ws ./misc/nginx_prod")
+    ex(f"rm {EMPTY_PROJECT_PATH}/misc/nginx_prod_ws")
 
 
 def init_project():
@@ -80,21 +98,33 @@ def init_project():
     features = list_features(server)
 
     print("Which features would you like to add to your project?")
+    convert = []
     for idx, feat in enumerate(features, 1):
+        convert.append(feat)
         print(f"{idx}. {feat}")
-    choix = input("Enter the numbers separated by commas (e.g., 1,3): ")
-    try:
-        indices = [int(x.strip())-1 for x in choix.split(',') if x.strip().isdigit()]
-        selected = [features[i] for i in indices if 0 <= i < len(features)]
-    except Exception:
-        print("Invalid input.")
-        return
-    dest = os.getcwd()
+    choice = input("Enter the numbers separated by commas (e.g., 1,3): ")
+    selected = []
+    list = choice.split(',')
+    for x in list:
+        if x.strip().isdigit():
+            i = int(x.strip()) - 1
+            if 0 <= i < len(features):
+
+                selected.append(features[convert[i]])
+            else:
+                print(f"Number is out of range: {x.strip()}")
+                return
+        else:
+            print(f"Invalid input: {x.strip()}")
+            return
+
+
     copy_features(server,selected)
     print("Initialization complete.")
 
 
 def main():
+    print("Sakura CLI")
     parser = argparse.ArgumentParser(prog='sakura', description='Sakura project management CLI')
     subparsers = parser.add_subparsers(dest='command')
 
