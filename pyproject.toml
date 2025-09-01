@@ -33,3 +33,6 @@ classifiers = [
 [project.urls]
 Homepage = "https://gitlab.com/Louciole/sakura"
 Issues = "https://gitlab.com/Louciole/sakura/-/issues"
+
+[project.scripts]
+sakura = "sakura.scripts.sakura:main"
