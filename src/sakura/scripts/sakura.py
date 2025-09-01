@@ -44,7 +44,7 @@ def copy_features(server, features):
         else:
             ex(f"cp {EMPTY_PROJECT_PATH}/server_static.py ./server.py")
             ex(f"cp {EMPTY_PROJECT_PATH}/server_static.ini ./server.ini")
-        ex(f"rm -r {EMPTY_PROJECT_PATH}/static/home")
+        ex(f"rm -r ./static/home")
     else:
         if "ws" in features:
             ex(f"cp {EMPTY_PROJECT_PATH}/server_sakura_ws.ini ./server.ini")
@@ -62,18 +62,18 @@ def copy_features(server, features):
         ex(f"cp -r {EMPTY_PROJECT_PATH}/db ./")
 
     if "js" not in features:
-        ex(f"rm -r {EMPTY_PROJECT_PATH}/static/framework")
-        ex(f"rm -r {EMPTY_PROJECT_PATH}/static/translations")
-        ex(f"rm {EMPTY_PROJECT_PATH}/static/mobileUiManifest.mjs")
+        ex(f"rm -r ./static/framework")
+        ex(f"rm -r ./static/translations")
+        ex(f"rm ./static/mobileUiManifest.mjs")
 
     if "md" not in features:
-        ex(f"rm -r {EMPTY_PROJECT_PATH}/static/markdown")
+        ex(f"rm -r ./static/markdown")
 
     if "ws" not in features:
-        ex(f"rm -r {EMPTY_PROJECT_PATH}/static/ws")
+        ex(f"rm -r ./static/ws")
     else:
         ex(f"cp {EMPTY_PROJECT_PATH}/misc/nginx_prod_ws ./misc/nginx_prod")
-    ex(f"rm {EMPTY_PROJECT_PATH}/misc/nginx_prod_ws")
+    ex(f"rm ./misc/nginx_prod_ws")
 
 
 def init_project():
@@ -103,20 +103,22 @@ def init_project():
         convert.append(feat)
         print(f"{idx}. {feat}")
     choice = input("Enter the numbers separated by commas (e.g., 1,3): ")
-    selected = []
-    list = choice.split(',')
-    for x in list:
-        if x.strip().isdigit():
-            i = int(x.strip()) - 1
-            if 0 <= i < len(features):
 
-                selected.append(features[convert[i]])
+    selected = []
+    if choice.strip() != "":
+        list = choice.split(',')
+        for x in list:
+            if x.strip().isdigit():
+                i = int(x.strip()) - 1
+                if 0 <= i < len(features):
+
+                    selected.append(features[convert[i]])
+                else:
+                    print(f"Number is out of range: {x.strip()}")
+                    return
             else:
-                print(f"Number is out of range: {x.strip()}")
+                print(f"Invalid input: {x.strip()}")
                 return
-        else:
-            print(f"Invalid input: {x.strip()}")
-            return
 
 
     copy_features(server,selected)
