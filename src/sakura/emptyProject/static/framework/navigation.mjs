@@ -226,6 +226,17 @@ export function initNavigation(){
         xhr("/static/mobileUiManifest.mjs", onload)
     }
 
+    document.addEventListener('click', function (event) {
+        if (global.state.activeFM && !global.state.activeFM.contains(event.target)) {
+            global.state.activeFM.classList.toggle("visible")
+            if (!openingFM){
+                global.state.activeFM = undefined
+            }else{
+                openingFM=false
+            }
+        }
+    }, false);
+
     if (global.state.socket){
         window.addEventListener('unload', () => {
             if (global.state?.socket.readyState !== WebSocket.CLOSED) {
