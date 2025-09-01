@@ -1,0 +1,29 @@
+server{
+    listen 80;
+    server_name disclone.carbonlab.dev;
+
+    location /static/ {
+        autoindex off;
+        root /var/www/html/disclone;
+    }
+
+    location / {
+        client_max_body_size 50M;
+        proxy_set_header Host $host;
+        proxy_pass "http://127.0.0.1:[SERV-PORT]";
+        proxy_redirect off;
+    }
+}
+
+server{
+    listen 80;
+    server_name ws.carbonlab.dev;
+    location / {
+        proxy_set_header Host $host;
+        proxy_pass "http://127.0.0.1:[WS-PORT]";
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "Upgrade";
+        proxy_redirect off;
+    }
+}

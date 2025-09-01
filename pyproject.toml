@@ -22,7 +22,8 @@ dependencies = [
     "dkimpy",
     "websockets",
     "multipart",
-    "colorama"
+    "colorama",
+    "psycopg"
 ]
 license = {file = "LICENSE.md"}
 classifiers = [
