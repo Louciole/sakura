@@ -23,8 +23,6 @@ def list_features(server):
         "MD: Js markdown parser": "md",
     }
 
-
-
 def copy_features(server, features):
     ex(f"cp -r {EMPTY_PROJECT_PATH}/misc ./")
     ex(f"cp -r {EMPTY_PROJECT_PATH}/static ./")
@@ -75,7 +73,11 @@ def copy_features(server, features):
     else:
         ex(f"cp {EMPTY_PROJECT_PATH}/misc/nginx_prod_ws ./misc/nginx_prod")
     ex(f"rm ./misc/nginx_prod_ws")
-
+    manifest = server+"\n"
+    for feat in features:
+        manifest += feat + "\n"
+    with open("sakura.manifest", "w+") as f:
+        f.write(manifest)
 
 def init_project():
     if os.path.exists("server.ini"):
@@ -125,6 +127,43 @@ def init_project():
     copy_features(server,selected)
     print("Initialization complete.")
 
+def installDeps():
+    print("Installing dependencies...")
+    server, features = getManifest()
+    installFeatures(features)
+
+    print("Dependencies installed.")
+
+def getManifest():
+
+    if not os.path.exists("sakura.manifest"):
+        print("sakura.manifest not found. Are you in a Sakura project directory?")
+        exit(1)
+
+
+    with open("sakura.manifest", "r") as f:
+        lines = f.readlines()
+        server = lines[0].strip()
+        features = [line.strip() for line in lines[1:]]
+    return server, features
+
+def installFeatures(features):
+    if "md" in features:
+        ex(f"cp -r {EMPTY_PROJECT_PATH}/static/markdown ./static/")
+
+    if "js" in features:
+        ex(f"cp -r {EMPTY_PROJECT_PATH}/static/framework ./static/")
+
+def updateDeps():
+    print("Updating Sakura...")
+    server, features = getManifest()
+
+    if "md" in features:
+        ex(f"rm -r ./static/markdown")
+
+    if "js" in features:
+        ex(f"rm -r ./static/framework")
+    installFeatures(features)
 
 def main():
     parser = argparse.ArgumentParser(prog='sakura', description='Sakura project management CLI')
@@ -132,8 +171,9 @@ def main():
 
     # Commande init
     parser_init = subparsers.add_parser('init', help='Initialize a new Sakura project')
+    parser_init = subparsers.add_parser('install', help='Import dependencies')
     parser_db = subparsers.add_parser('db', help='Manage the database')
-    parser_update = subparsers.add_parser('update', help='Update Sakura')
+    parser_update = subparsers.add_parser('update', help='Update dependencies')
     parser_test = subparsers.add_parser('test', help='Run tests')
     parser_add_feature = subparsers.add_parser('add-feature', help='Add a feature to the project')
 
@@ -144,7 +184,9 @@ def main():
     elif args.command == 'db':
         pass
     elif args.command == 'update':
-        pass
+        updateDeps()
+    elif args.command == 'install':
+        installDeps()
     elif args.command == 'test':
         ex(f"python {HERE}/testsRun.py")
     elif args.command == 'add-feature':
