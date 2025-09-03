@@ -1,12 +1,11 @@
 import argparse
 import os
 import subprocess
+from utils import ex, Installer
 
 HERE = os.path.dirname(__file__)
+PATH = dirname(abspath(__file__))
 EMPTY_PROJECT_PATH = os.path.join(HERE, '..', 'emptyProject')
-
-def ex( command):
-    subprocess.run(command, shell=True, check=True)
 
 def list_features(server):
     if server == "http":
@@ -177,6 +176,17 @@ def main():
     parser_test = subparsers.add_parser('test', help='Run tests')
     parser_add_feature = subparsers.add_parser('add-feature', help='Add a feature to the project')
 
+    parser_nginx = subparsers.add_parser('nginx', help='Setup/manage nginx configuration')
+    nginx_subparsers = parser_nginx.add_subparsers(dest='nginx_command')
+    parser_nginx_setup = nginx_subparsers.add_parser('setup', help='Install nginx config')
+    parser_nginx_mime = nginx_subparsers.add_parser('mime', help='Add mimetype for mjs files')
+    parser_nginx_reset = nginx_subparsers.add_parser('reset', help='Reset nginx config')
+
+    parser_service = subparsers.add_parser('service', help='Setup/manage systemD service')
+    service_subparsers = parser_service.add_subparsers(dest='service_command')
+    parser_service_setup = service_subparsers.add_parser('setup', help='Install systemd config')
+
+
     args = parser.parse_args()
 
     if args.command == 'init':
@@ -191,5 +201,25 @@ def main():
         ex(f"python {HERE}/testsRun.py")
     elif args.command == 'add-feature':
         pass
+    elif args.command == 'nginx':
+        installer = Installer(PATH + "/server.ini")
+
+        if args.nginx_command == 'setup':
+            installer.installNginx()
+        elif args.nginx_command == 'mime':
+            installer.addNginxMimeType()
+        elif args.nginx_command == 'reset':
+            installer.nukeNginx()
+            installer.installNginx(link=False)
+        else:
+            parser_nginx.print_help()
+
+    elif args.command == 'service':
+        installer = Installer(PATH + "/server.ini")
+
+        if args.nginx_command == 'setup':
+            installer.installService()
+        else:
+            parser_service.print_help()
     else:
         parser.print_help()

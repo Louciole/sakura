@@ -396,7 +396,7 @@ class Server(server):
         if not self.features.get("websockets"):
             raise HTTPError(self.response, 404)
 
-        if self.config.get("server", "DEBUG"):
+        if self.config.getboolean("server", "DEBUG"):
             url = self.config.get("NOTIFICATION", "DEBUG_URL")
         else:
             url = self.config.get("NOTIFICATION", "URL")

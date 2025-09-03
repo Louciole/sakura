@@ -14,14 +14,6 @@ class Installer:
 
         if arg == "all" or arg == "a":
             self.installAll()
-        elif arg == "nginx":
-            if len(sys.argv) > 2 and sys.argv[2] == "reset":
-                self.nukeNginx()
-                self.installNginx(link=False)
-            elif len(sys.argv) > 2 and sys.argv[2] == "mime":
-                self.addNginxMimeType()
-            else:
-                self.installNginx()
         elif arg == "db":
             self.installDB()
         elif arg == "uniauth":
@@ -71,76 +63,11 @@ class Installer:
         self.installUniauth()
         self.initDB()
 
-    def installNginx(self, link=True):
-        print("----NGINX----")
 
-        if self.config.getboolean("server", "DEBUG"):
-            self.editFile("misc/nginx_local", {"[PATH]": PATH, "[SERV-PORT]": self.config.get("server", "PORT")})
-            self.ex("sudo cp ./misc/nginx_local_filled /etc/nginx/sites-available/" + self.name)
-        else:
-            try:
-                self.editFile("misc/nginx_prod", {"[PATH]": PATH, "[SERV-PORT]": self.config.get("server", "PORT"), "[WS-PORT]": self.config.get("NOTIFICATION", "PORT")})
-            except Exception:
-                self.editFile("misc/nginx_prod", {"[PATH]": PATH, "[SERV-PORT]": self.config.get("server", "PORT")})
-            self.ex("sudo cp ./misc/nginx_prod_filled /etc/nginx/sites-available/" + self.name)
 
-        if not link:
-            return
 
-        self.ex("sudo ln -s /etc/nginx/sites-available/" + self.name + " /etc/nginx/sites-enabled/")
 
-    def addNginxMimeType(self):
-        pattern = 'application/javascript'
-        new_line = 'application/javascript mjs;'
-        with open('/etc/nginx/mime.types', 'r+') as f:
-            lines = f.readlines()
-            found = False
-            for i, line in enumerate(lines):
-                if pattern in line:
-                    found = True
-                    lines.insert(i + 1, new_line + '\n')
-                    break
-            if not found:
-                print(f"Pattern '{pattern}' not found in {filename}.")
-            else:
-                f.seek(0)
-                f.writelines(lines)
 
-    def setupCrons(self):
-        try:
-            self.ex("crontab -l > crontab")
-        except Exception:
-            pass
-        self.ex("echo '*/15 * * * * " + PATH + "/venv/bin/python3 " + PATH + "/crons/15mins.py' >> crontab")
-        self.ex("echo '0 * * * * " + PATH + "/venv/bin/python3 " + PATH + "/crons/1h.py' >> crontab")
-        self.ex("echo '0 0 * * * " + PATH + "/venv/bin/python3 " + PATH + "/crons/1day.py' >> crontab")
-        self.ex("crontab crontab")
-
-    def editFile(self, file, templates):
-        with open(file, "r+") as f:
-            data = f.read()
-            for key in templates:
-                data = data.replace(key, templates[key])
-        with open(file+"_filled", "w+") as f:
-            f.write(data)
-
-    def importConf(self, configFile):
-        self.config = ConfigParser()
-        try:
-            self.config.read(configFile)
-            print("config at " + configFile + " loaded")
-        except Exception:
-            print("please create a config file")
-
-    def nukeNginx(self):
-        self.ex("sudo rm /etc/nginx/sites-available/" + self.name)
-
-    def installService(self):
-        self.editFile("misc/sakura.service", {"[PATH]": PATH, "[SERV-PORT]": self.config.get("server", "PORT"), "[NAME]":self.config.get("server", "service_name")} )
-        self.ex("cp ./misc/sakura.service_filled /etc/systemd/system/" + self.name + ".service")
-        self.ex("sudo systemctl daemon-reload")
-        self.ex("sudo systemctl enable " + self.name + ".service")
-        self.ex("sudo systemctl start " + self.name + ".service")
 
 
 if len(sys.argv) > 1:
