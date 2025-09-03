@@ -4,7 +4,7 @@ import subprocess
 from .utils import ex, Installer
 
 HERE = os.path.dirname(__file__)
-PATH = dirname(abspath(__file__))
+PATH = os.path.dirname(os.path.abspath(__file__))
 EMPTY_PROJECT_PATH = os.path.join(HERE, '..', 'emptyProject')
 
 def list_features(server):
