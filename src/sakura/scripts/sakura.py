@@ -1,7 +1,7 @@
 import argparse
 import os
 import subprocess
-from utils import ex, Installer
+from .utils import ex, Installer
 
 HERE = os.path.dirname(__file__)
 PATH = dirname(abspath(__file__))
