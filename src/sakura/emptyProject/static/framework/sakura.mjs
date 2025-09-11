@@ -79,6 +79,13 @@ export function deleteElement(element, id){
     updateElement(element)
 }
 
+// this deletes an element from a dict BY ID
+export function deleteElementDict(element, id){
+    // console.log(element,'has been removed:', element[id]);
+    eval(`delete ${element}[id]`);
+    updateElement(element)
+}
+
 // this deletes an element from a list BY VALUE
 export function deleteVal(element, val){
     // console.log(element,'has been removed:', element[id]);
@@ -147,3 +154,20 @@ export function difference(arrKeys, dict) {
     }
     return Array.from(result);
 }
+
+export function generateUUID() {
+    let d = new Date().getTime();//Timestamp
+    let d2 = ((typeof performance !== 'undefined') && performance.now && (performance.now()*1000)) || 0;//Time in microseconds since page-load or 0 if unsupported
+    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+        let r = Math.random() * 16;//random number between 0 and 16
+        if(d > 0){//Use timestamp until depleted
+            r = (d + r)%16 | 0;
+            d = Math.floor(d/16);
+        } else {//Use microseconds since page-load if supported
+            r = (d2 + r)%16 | 0;
+            d2 = Math.floor(d2/16);
+        }
+        return (c === 'x' ? r : (r & 0x3 | 0x8)).toString(16);
+    });
+}
+
