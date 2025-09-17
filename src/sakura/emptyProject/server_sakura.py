@@ -3,7 +3,6 @@ from sakura import Server, HTTPError, HTTPRedirect
 from os.path import abspath, dirname
 
 PATH = dirname(abspath(__file__))
-server = baseServer.BaseServer
 
 class App(Server):
     features = {"errors": {404: "/static/404.html"}}

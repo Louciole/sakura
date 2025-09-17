@@ -4,7 +4,7 @@ import subprocess
 from .utils import ex, Installer
 
 HERE = os.path.dirname(__file__)
-PATH = os.path.dirname(os.path.abspath(__file__))
+PATH = os.getcwd()
 EMPTY_PROJECT_PATH = os.path.join(HERE, '..', 'emptyProject')
 
 def list_features(server):
@@ -202,7 +202,7 @@ def main():
     elif args.command == 'add-feature':
         pass
     elif args.command == 'nginx':
-        installer = Installer(PATH + "/server.ini")
+        installer = Installer(PATH + "/server.ini", PATH)
 
         if args.nginx_command == 'setup':
             installer.installNginx()
@@ -215,7 +215,7 @@ def main():
             parser_nginx.print_help()
 
     elif args.command == 'service':
-        installer = Installer(PATH + "/server.ini")
+        installer = Installer(PATH + "/server.ini", PATH)
 
         if args.nginx_command == 'setup':
             installer.installService()

@@ -9,7 +9,6 @@ import websockets
 import threading
 
 PATH = dirname(abspath(__file__))
-server = baseServer.BaseServer
 
 class App(Server):
     features = {"websockets": True, "errors": {404: "/static/404.html"}}

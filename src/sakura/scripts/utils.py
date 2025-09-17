@@ -6,7 +6,8 @@ def ex(command):
     subprocess.run(command, shell=True, check=True)
 
 class Installer:
-    def __init__(self, configFile):
+    def __init__(self, configFile, path):
+        self.PATH = path
         self.importConf(configFile)
         self.uniauth = "N"
         self.name = self.config.get("server", "SERVICE_NAME").replace(" ", "_").lower()
@@ -15,13 +16,13 @@ class Installer:
         print("----NGINX----")
 
         if self.config.getboolean("server", "DEBUG"):
-            self.editFile("misc/nginx_local", {"[PATH]": PATH, "[SERV-PORT]": self.config.get("server", "PORT")})
+            self.editFile("misc/nginx_local", {"[PATH]": self.PATH, "[SERV-PORT]": self.config.get("server", "PORT")})
             ex("sudo cp ./misc/nginx_local_filled /etc/nginx/sites-available/" + self.name)
         else:
             try:
-                self.editFile("misc/nginx_prod", {"[PATH]": PATH, "[SERV-PORT]": self.config.get("server", "PORT"), "[WS-PORT]": self.config.get("NOTIFICATION", "PORT")})
+                self.editFile("misc/nginx_prod", {"[PATH]": self.PATH, "[SERV-PORT]": self.config.get("server", "PORT"), "[WS-PORT]": self.config.get("NOTIFICATION", "PORT")})
             except Exception:
-                self.editFile("misc/nginx_prod", {"[PATH]": PATH, "[SERV-PORT]": self.config.get("server", "PORT")})
+                self.editFile("misc/nginx_prod", {"[PATH]": self.PATH, "[SERV-PORT]": self.config.get("server", "PORT")})
             ex("sudo cp ./misc/nginx_prod_filled /etc/nginx/sites-available/" + self.name)
 
         if not link:
@@ -51,9 +52,9 @@ class Installer:
             ex("crontab -l > crontab")
         except Exception:
             pass
-        ex("echo '*/15 * * * * " + PATH + "/venv/bin/python3 " + PATH + "/crons/15mins.py' >> crontab")
-        ex("echo '0 * * * * " + PATH + "/venv/bin/python3 " + PATH + "/crons/1h.py' >> crontab")
-        ex("echo '0 0 * * * " + PATH + "/venv/bin/python3 " + PATH + "/crons/1day.py' >> crontab")
+        ex("echo '*/15 * * * * " + self.PATH + "/venv/bin/python3 " + self.PATH + "/crons/15mins.py' >> crontab")
+        ex("echo '0 * * * * " + self.PATH + "/venv/bin/python3 " + self.PATH + "/crons/1h.py' >> crontab")
+        ex("echo '0 0 * * * " + self.PATH + "/venv/bin/python3 " + self.PATH + "/crons/1day.py' >> crontab")
         ex("crontab crontab")
 
     def importConf(self, configFile):
@@ -68,7 +69,7 @@ class Installer:
         ex("sudo rm /etc/nginx/sites-available/" + self.name)
 
     def installService(self):
-        self.editFile("misc/sakura.service", {"[PATH]": PATH, "[SERV-PORT]": self.config.get("server", "PORT"), "[NAME]":self.config.get("server", "service_name")} )
+        self.editFile("misc/sakura.service", {"[PATH]": self.PATH, "[SERV-PORT]": self.config.get("server", "PORT"), "[NAME]":self.config.get("server", "service_name")} )
         ex("cp ./misc/sakura.service_filled /etc/systemd/system/" + self.name + ".service")
         ex("sudo systemctl daemon-reload")
         ex("sudo systemctl enable " + self.name + ".service")
