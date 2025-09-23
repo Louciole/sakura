@@ -427,22 +427,38 @@ class Server(server):
         message = {"type": "notif", "content": content}
 
         clients = self.db.getAll("active_client", account, "userid")
+        clients_to_remove = []
+
         for client in clients:
             #TODO handle multi server
             if self.pool.get(client["id"]):
                 websocket = self.pool[client["id"]]
 
-                if exclude and websocket ==exclude:
+                if exclude and websocket == exclude:
                     continue
 
                 try:
+                    if hasattr(websocket, 'closed') and websocket.closed:
+                        print(f"[INFO] Client {client['id']} already closed (closed)")
+                        clients_to_remove.append(client["id"])
+                        continue
+                    elif hasattr(websocket, 'state') and websocket.state.name in ['CLOSED', 'CLOSING']:
+                        print(f"[INFO] Client {client['id']} already closed (state: {websocket.state.name})")
+                        clients_to_remove.append(client["id"])
+                        continue
+
                     await websocket.send(json.dumps(message))
                 except Exception as e:
-                    print(Fore.RED,"[ERROR] Sakura - exception sending a message '", message,"' on a ws", e)
-                    del self.pool[client["id"]]
-                    self.db.deleteSomething("active_client", client["id"])
+                    clients_to_remove.append(client["id"])
             else:
-                self.db.deleteSomething("active_client", client["id"])
+                clients_to_remove.append(client["id"])
+
+        for client_id in clients_to_remove:
+            print(f"[INFO] Cleaning client {client_id}")
+            if client_id in self.pool:
+                del self.pool[client_id]
+            self.db.deleteSomething("active_client", client_id)
+
 
     def checkWSAuth(self, ws, clientID):
         if self.pool.get(clientID) == ws:
