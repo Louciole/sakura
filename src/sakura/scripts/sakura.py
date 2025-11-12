@@ -217,7 +217,7 @@ def main():
     elif args.command == 'service':
         installer = Installer(PATH + "/server.ini", PATH)
 
-        if args.nginx_command == 'setup':
+        if args.service_command == 'setup':
             installer.installService()
         else:
             parser_service.print_help()
