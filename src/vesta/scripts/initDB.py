@@ -1,4 +1,4 @@
-from sakura import Server
+from vesta import Server
 from os.path import abspath, dirname
 import sys
 from psycopg import sql

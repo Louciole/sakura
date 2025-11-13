@@ -5,8 +5,8 @@ Thank you for considering contributing to PROJECT_NAME! Your help is invaluable 
 - GitLab: [GitLab Link](https://gitlab.com/Louciole/disclone/)
 - GitHub [Mirror]: [GitHub Link](https://github.com/Louciole/disclone)
 - Issues: [GitLab Issues](https://gitlab.com/Louciole/disclone/-/issues)
-- Documentation: [Sakura Docs](https://louciole.gitlab.io/sakura-docs/)
-- Documentation Repo: [GitLab](https://gitlab.com/Louciole/sakura-docs)
+- Documentation: [Vesta Docs](https://louciole.gitlab.io/vesta-docs/)
+- Documentation Repo: [GitLab](https://gitlab.com/Louciole/vesta-docs)
 
 ---
 

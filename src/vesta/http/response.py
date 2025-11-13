@@ -7,7 +7,7 @@ class Response:
     def __init__(self, start_response, code=200, type="html"):
         self.cookies = {}
         self.type = type
-        self.headers = [('Content-Type', 'text/' + type),('Cache-Control', 'no-cache')]
+        self.headers = [('Content-Type', 'text/' + type),('Cache-Control', 'no-cache'), ('Server', 'mag v1 Harpie')]
         self.code = code
         self.start_response = start_response
         self.content = ""

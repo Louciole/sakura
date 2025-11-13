@@ -1,6 +1,6 @@
 # APP.
 
-❓️An APP based on sakura. <br>  
+❓️An APP based on vesta. <br>  
 🌍 Production : https://app.carbonlab.dev <br>
 🟢 Status : https://status.carbonlab.dev <br>
 🏀 Roadmap : https://synapse.carbonlab.dev/project?uid=11&&access=read-only <br>

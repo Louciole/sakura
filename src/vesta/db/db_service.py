@@ -62,7 +62,7 @@ class DB:
             else:
                 return []
         except Exception as e:
-            print(f"[SAKURA] An error occurred with the db: {e}")
+            print(f"[VESTA] An error occurred with the db: {e}")
             self.conn.rollback()
 
     def getAll(self, table, id, selector='id'):
@@ -75,7 +75,7 @@ class DB:
             else:
                 return []
         except Exception as e:
-            print(f"[SAKURA] An error occurred with the db: {e}")
+            print(f"[VESTA] An error occurred with the db: {e}")
             self.conn.rollback()
 
     def getSomethingProxied(self, table, proxy, commonTable, id):
@@ -110,7 +110,7 @@ class DB:
             else:
                 return []
         except Exception as e:
-            print(f"[SAKURA] An error occurred with the db: {e}")
+            print(f"[VESTA] An error occurred with the db: {e}")
             self.conn.rollback()
 
 
@@ -152,7 +152,7 @@ class DB:
             else:
                 return []
         except Exception as e:
-            print(f"[SAKURA] An error occurred with the db: {e}")
+            print(f"[VESTA] An error occurred with the db: {e}")
             self.conn.rollback()
 
     def insertDict(self, table, dict, getId=False):

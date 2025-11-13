@@ -16,10 +16,10 @@ from io import BytesIO
 
 from configparser import ConfigParser
 
-from sakura.http import response
-from sakura.http import error
-from sakura.http import redirect
-from sakura.db import db_service as db
+from vesta.http import response
+from vesta.http import error
+from vesta.http import redirect
+from vesta.db import db_service as db
 Response = response.Response
 HTTPRedirect = redirect.HTTPRedirect
 HTTPError = error.HTTPError
@@ -37,7 +37,7 @@ class BaseServer:
     features = {}
 
     def __init__(self, path, configFile, noStart=False):
-        print(Fore.GREEN,"[INFO] starting Sakura server...")
+        print(Fore.GREEN,"[INFO] starting Vesta server...")
         self.path = path
 
         self.importConf(configFile)
@@ -135,7 +135,7 @@ class BaseServer:
 
 
     def tryDefault(self, environ, target):
-        print(Fore.WHITE,"[INFO] Sakura - using default route")
+        print(Fore.WHITE,"[INFO] Vesta - using default route")
 
         args = self.parseRequest(environ)
         args["target"] = target
@@ -149,7 +149,7 @@ class BaseServer:
 
     def onrequest(self, environ, start_response):
         self.response = Response(start_response=start_response)
-        print(Fore.WHITE,"[INFO] Sakura - request received :'", str(environ['PATH_INFO']) + "'" + " with "+ str(environ.get('QUERY_STRING')))
+        print(Fore.WHITE,"[INFO] Vesta - request received :'", str(environ['PATH_INFO']) + "'" + " with "+ str(environ.get('QUERY_STRING')))
         target = environ['PATH_INFO']
 
         if routes.get(target):
@@ -171,7 +171,7 @@ class BaseServer:
             return self.response.encode()
 
     def handleUnexpected(self, e):
-        print(Fore.RED,"[ERROR] Sakura - UNEXPECTED ERROR :", e)
+        print(Fore.RED,"[ERROR] Vesta - UNEXPECTED ERROR :", e)
         self.response.code = 500
         self.response.ok()
         self.response.content = str(e)
@@ -196,9 +196,9 @@ class BaseServer:
         self.config = ConfigParser()
         try:
             self.config.read(self.path + configFile)
-            print(Fore.GREEN,"[INFO] Sakura - config at " + self.path + configFile + " loaded")
+            print(Fore.GREEN,"[INFO] Vesta - config at " + self.path + configFile + " loaded")
         except Exception:
-            print(Fore.RED,"[ERROR] Sakura - Please create a config file")
+            print(Fore.RED,"[ERROR] Vesta - Please create a config file")
 
     def start(self):
         self.fileCache = {}
@@ -218,7 +218,7 @@ class BaseServer:
         fastwsgi.server.nowait = 1
         fastwsgi.server.hook_sigint = 1
 
-        print(Fore.GREEN,"[INFO] Sakura - server running on PID:", os.getpid())
+        print(Fore.GREEN,"[INFO] Vesta - server running on PID:", os.getpid())
         fastwsgi.server.init(app=self.onrequest, host=self.config.get('server', 'IP'),
                              port=int(self.config.get('server', 'PORT')))
         while True:

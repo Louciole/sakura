@@ -45,18 +45,18 @@ def copy_features(server, features):
         ex(f"rm -r ./static/home")
     else:
         if "ws" in features:
-            ex(f"cp {EMPTY_PROJECT_PATH}/server_sakura_ws.ini ./server.ini")
-            ex(f"cp {EMPTY_PROJECT_PATH}/server_sakura_ws.py ./server.py")
+            ex(f"cp {EMPTY_PROJECT_PATH}/server_vesta_ws.ini ./server.ini")
+            ex(f"cp {EMPTY_PROJECT_PATH}/server_vesta_ws.py ./server.py")
         else:
-            ex(f"cp {EMPTY_PROJECT_PATH}/server_sakura.ini ./server.ini")
-            ex(f"cp {EMPTY_PROJECT_PATH}/server_sakura.py ./server.py")
+            ex(f"cp {EMPTY_PROJECT_PATH}/server_vesta.ini ./server.ini")
+            ex(f"cp {EMPTY_PROJECT_PATH}/server_vesta.py ./server.py")
 
         ex(f"cp -r {EMPTY_PROJECT_PATH}/mailing ./")
 
         if "cron" in features:
             ex(f"cp -r {EMPTY_PROJECT_PATH}/crons ./")
 
-    if "orm" in features or server == "sakura":
+    if "orm" in features or server == "vesta":
         ex(f"cp -r {EMPTY_PROJECT_PATH}/db ./")
 
     if "js" not in features:
@@ -75,24 +75,24 @@ def copy_features(server, features):
     manifest = server+"\n"
     for feat in features:
         manifest += feat + "\n"
-    with open("sakura.manifest", "w+") as f:
+    with open("vesta.manifest", "w+") as f:
         f.write(manifest)
 
 def init_project():
     if os.path.exists("server.ini"):
-        print("A Sakura project already exists in this directory.")
+        print("A Vesta project already exists in this directory.")
         return
 
 
     # Choose server type
     print("Choose server type:")
     print("1. HTTP (for static websites or simple apps without auth or websockets)")
-    print("2. Sakura (with uniauth, ORM, mailing)")
+    print("2. Vesta (with uniauth, ORM, mailing)")
     choice = input("Enter 1 or 2: ")
     if choice == '1':
         server = "http"
     elif choice == '2':
-        server = "sakura"
+        server = "vesta"
     else:
         print("Invalid choice.")
         return
@@ -135,12 +135,12 @@ def installDeps():
 
 def getManifest():
 
-    if not os.path.exists("sakura.manifest"):
-        print("sakura.manifest not found. Are you in a Sakura project directory?")
+    if not os.path.exists("vesta.manifest"):
+        print("vesta.manifest not found. Are you in a Vesta project directory?")
         exit(1)
 
 
-    with open("sakura.manifest", "r") as f:
+    with open("vesta.manifest", "r") as f:
         lines = f.readlines()
         server = lines[0].strip()
         features = [line.strip() for line in lines[1:]]
@@ -154,7 +154,7 @@ def installFeatures(features):
         ex(f"cp -r {EMPTY_PROJECT_PATH}/static/framework ./static/")
 
 def updateDeps():
-    print("Updating Sakura...")
+    print("Updating Vesta...")
     server, features = getManifest()
 
     if "md" in features:
@@ -165,11 +165,11 @@ def updateDeps():
     installFeatures(features)
 
 def main():
-    parser = argparse.ArgumentParser(prog='sakura', description='Sakura project management CLI')
+    parser = argparse.ArgumentParser(prog='vesta', description='Vesta project management CLI')
     subparsers = parser.add_subparsers(dest='command')
 
     # Commande init
-    parser_init = subparsers.add_parser('init', help='Initialize a new Sakura project')
+    parser_init = subparsers.add_parser('init', help='Initialize a new Vesta project')
     parser_init = subparsers.add_parser('install', help='Import dependencies')
     parser_db = subparsers.add_parser('db', help='Manage the database')
     parser_update = subparsers.add_parser('update', help='Update dependencies')

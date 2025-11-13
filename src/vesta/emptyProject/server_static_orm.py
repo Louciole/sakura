@@ -1,4 +1,4 @@
-from sakura.http import baseServer
+from vesta.http import baseServer
 
 from os.path import abspath, dirname
 
@@ -6,7 +6,7 @@ PATH = dirname(abspath(__file__))
 server = baseServer.BaseServer
 
 class App(server):
-    features = {}
+    features = {"orm": True}
 
     @server.expose
     def index(self, *args, **kwargs):

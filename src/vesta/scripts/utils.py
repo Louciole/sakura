@@ -69,8 +69,8 @@ class Installer:
         ex("sudo rm /etc/nginx/sites-available/" + self.name)
 
     def installService(self):
-        self.editFile("misc/sakura.service", {"[PATH]": self.PATH, "[SERV-PORT]": self.config.get("server", "PORT"), "[NAME]":self.config.get("server", "service_name")} )
-        ex("cp ./misc/sakura.service_filled /etc/systemd/system/" + self.name + ".service")
+        self.editFile("misc/vesta.service", {"[PATH]": self.PATH, "[SERV-PORT]": self.config.get("server", "PORT"), "[NAME]":self.config.get("server", "service_name")} )
+        ex("cp ./misc/vesta.service_filled /etc/systemd/system/" + self.name + ".service")
         ex("sudo systemctl daemon-reload")
         ex("sudo systemctl enable " + self.name + ".service")
         ex("sudo systemctl start " + self.name + ".service")

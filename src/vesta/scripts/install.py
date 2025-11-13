@@ -18,8 +18,8 @@ class Installer:
             self.installDB()
         elif arg == "uniauth":
             self.installUniauth()
-        elif arg == "sakura":
-            self.resetSakura()
+        elif arg == "vesta":
+            self.resetVesta()
         elif arg == "reset":
             self.resetDB()
         elif arg == "service":
@@ -35,9 +35,9 @@ class Installer:
         self.ex("sudo -u postgres createdb " + self.config.get("DB", "DB_NAME"))
         self.ex("sudo -u postgres createuser " + self.config.get("DB", "DB_USER") + " -s --pwprompt ")
 
-    def resetSakura(self):
-        self.ex("pip uninstall sakura")
-        self.ex("pip install git+https://gitlab.com/Louciole/sakura.git/")
+    def resetVesta(self):
+        self.ex("pip uninstall vesta")
+        self.ex("pip install git+https://gitlab.com/Louciole/vesta.git/")
 
     def installUniauth(self):
         print("----UNIAUTH----")

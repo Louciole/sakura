@@ -1,4 +1,4 @@
-from sakura import Server, HTTPError, HTTPRedirect
+from vesta import Server, HTTPError, HTTPRedirect
 
 from os.path import abspath, dirname
 import json

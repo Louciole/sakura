@@ -21,7 +21,7 @@ class Mailing:
             self.path = path
             with open(self.path + "/mailing/dkim.txt") as fh:
                 self.private = fh.read()
-            print("[Sakura - mails] server connected")
+            print("[Vesta - mails] server connected")
         except smtplib.SMTPException as e:
             print(f"Error connecting to mailing server : {e}")
             self.smtp.quit()
@@ -31,7 +31,7 @@ class Mailing:
         self.smtp.ehlo()  # send the extended hello to our server
         self.smtp.starttls()
         self.smtp.login(self.address, self.password)
-        print("[Sakura - mails] server reconnected")
+        print("[Vesta - mails] server reconnected")
 
     def is_connected(conn):
         try:
@@ -45,7 +45,7 @@ class Mailing:
             self.restart()
         try:
             self.smtp.send_message(content)
-            print("[Sakura - mails] mail sent")
+            print("[Vesta - mails] mail sent")
         except smtplib.SMTPException as e:
             print(f"Error sending a mail : {e}")
 

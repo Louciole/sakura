@@ -1,9 +1,9 @@
 """
 ------------------------------------------------------------------------------------------------------------------------
 
-   __.--~~.,-.__                    Welcome to SAKURA
+   __.--~~.,-.__                    Welcome to VESTA
    `~-._.-(`-.__`-.
-           \    `~~`        Sakura is a strongly opinionated and minimalist Framework.
+           \    `~~`        Vesta is a strongly opinionated and minimalist Framework.
       .--./ \                   It bundles a lot of different features:
      /#   \  \.--.              - a http server
      \    /  /#   \             - a websocket server
@@ -32,17 +32,17 @@ from configparser import ConfigParser
 import websockets
 
 # in house modules
-from sakura.db import db_service as db
-from sakura.mailing import mailing_service as mailing
+from vesta.db import db_service as db
+from vesta.mailing import mailing_service as mailing
 
 # OTP imports
 import random as rand
 import math
 
-from sakura.http import baseServer as server
-from sakura.http import error as HTTPError
-from sakura.http import redirect as HTTPRedirect
-from sakura.http import response as Response
+from vesta.http import baseServer as server
+from vesta.http import error as HTTPError
+from vesta.http import redirect as HTTPRedirect
+from vesta.http import response as Response
 server = server.BaseServer
 Response = Response.Response
 HTTPRedirect = HTTPRedirect.HTTPRedirect
@@ -55,7 +55,7 @@ class Server(server):
     features = {}
 
     def __init__(self, path, configFile, noStart=False):
-        print(Fore.GREEN,"[INFO] starting Sakura server...")
+        print(Fore.GREEN,"[INFO] starting Vesta server...")
         self.path = path
 
         self.importConf(configFile)
@@ -286,9 +286,9 @@ class Server(server):
         self.config = ConfigParser()
         try:
             self.config.read(self.path + configFile)
-            print(Fore.GREEN,"[INFO] Sakura - config at " + self.path + configFile + " loaded")
+            print(Fore.GREEN,"[INFO] Vesta - config at " + self.path + configFile + " loaded")
         except Exception:
-            print(Fore.RED,"[ERROR] Sakura - Please create a config file")
+            print(Fore.RED,"[ERROR] Vesta - Please create a config file")
 
     def start(self):
         self.fileCache = {}
@@ -301,7 +301,7 @@ class Server(server):
             self.stop_event = asyncio.Event()
             websocket_thread = threading.Thread(target=self.startWebSockets)
             websocket_thread.start()
-            print(Fore.GREEN,"[INFO] Sakura - WS server started")
+            print(Fore.GREEN,"[INFO] Vesta - WS server started")
 
         if self.features.get("errors"):
             for code, page in self.features["errors"].items():
@@ -312,7 +312,7 @@ class Server(server):
         fastwsgi.server.nowait = 1
         fastwsgi.server.hook_sigint = 1
 
-        print(Fore.GREEN,"[INFO] Sakura - server running on PID:", os.getpid())
+        print(Fore.GREEN,"[INFO] Vesta - server running on PID:", os.getpid())
         fastwsgi.server.init(app=self.onrequest, host=self.config.get('server', 'IP'),
                              port=int(self.config.get('server', 'PORT')))
         while True:
@@ -361,7 +361,7 @@ class Server(server):
             loop.close()
 
         except Exception as e:
-            print(Fore.RED,"[ERROR] Sakura - exception in ws server:", e)
+            print(Fore.RED,"[ERROR] Vesta - exception in ws server:", e)
 
     def file(self,path):
         file = self.fileCache.get(path)
@@ -479,7 +479,7 @@ class Server(server):
                 try:
                     asyncio.run(ws_send(json.dumps(message)))
                 except Exception as e:
-                    print(Fore.RED,"[ERROR] Sakura - exception sending a message '", message,"' on a ws", e)
+                    print(Fore.RED,"[ERROR] Vesta - exception sending a message '", message,"' on a ws", e)
                     del self.pool[client["id"]]
                     self.db.deleteSomething("active_client", client["id"])
             else:
